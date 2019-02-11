@@ -24,6 +24,7 @@ using System.Xml.Schema;
 using System.Xml;
 using System.Xml.Linq;
 using ICSharpCode.AvalonEdit;
+using Newtonsoft.Json.Linq;
 
 namespace WpfApplication2
 {
@@ -585,7 +586,14 @@ namespace WpfApplication2
         {
             try
             {
-                SourceXml.Document.Text = PrettyXml(SourceXml.Document.Text);
+                if (this._mainViewModel.XsltProcessingMode == XsltProcessingMode.JSON_JustNET)
+                {
+                    SourceXml.Document.Text = PrettyJson(SourceXml.Document.Text);
+                }
+                else
+                {
+                    SourceXml.Document.Text = PrettyXml(SourceXml.Document.Text);
+                }
             }
             catch (Exception ex)
             {
@@ -597,14 +605,26 @@ namespace WpfApplication2
         {
             try
             {
-                SourceXslt.Document.Text = PrettyXml(SourceXslt.Document.Text);
+                if (this._mainViewModel.XsltProcessingMode == XsltProcessingMode.JSON_JustNET)
+                {
+                    SourceXslt.Document.Text = PrettyJson(SourceXslt.Document.Text);
+                }
+                else
+                {
+                    SourceXslt.Document.Text = PrettyXml(SourceXslt.Document.Text);
+                }
             }
             catch (Exception ex)
             {
                 MessageBox.Show(ex.ToString());
             }
         }
-        
+
+        internal static string PrettyJson(string json)
+        {
+            return JToken.Parse(json).ToString(Newtonsoft.Json.Formatting.Indented);
+        }
+
         static string PrettyXml(string xml)
         {
             XDocument doc = XDocument.Parse(xml);

@@ -10,6 +10,7 @@ using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.IO;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows;
@@ -17,8 +18,11 @@ using System.Xml;
 using System.Xml.Linq;
 using System.Xml.Schema;
 using System.Xml.Xsl;
+using JUST;
+using Newtonsoft.Json.Linq;
 using ToastNotifications;
 using Underscore;
+using WpfApplication2;
 
 namespace JefimsIncredibleXsltTool
 {
@@ -36,7 +40,8 @@ namespace JefimsIncredibleXsltTool
     public enum XsltProcessingMode
     {
         Saxon,
-        DotNet
+        DotNet,
+        JSON_JustNET
     }
 
     public class MainViewModel : Observable
@@ -356,6 +361,13 @@ namespace JefimsIncredibleXsltTool
                         case XsltProcessingMode.DotNet:
                             result = XsltTransformDotNet(xml, xslt, this.XsltParameters.Where(o => o != null && o.Name != null).ToArray());
                             break;
+                        case XsltProcessingMode.JSON_JustNET:
+                            result = JsonTransformUsingJustNET(xml, xslt,
+                                this.XsltParameters.Where(o => o != null && o.Name != null).ToArray());
+                            break;
+                        default:
+                            MessageBox.Show("Unknown transform method: " + this.XsltProcessingMode);
+                            break;
                     }
                     
                     var validation = this.Validate(result);
@@ -394,6 +406,21 @@ namespace JefimsIncredibleXsltTool
             });
 
             return true;
+        }
+
+        private string JsonTransformUsingJustNET(string json, string transformer, XsltParameter[] toArray)
+        {
+            var result = JsonTransformer.Transform(transformer, json);
+            try
+            {
+                result = MainWindow.PrettyJson(result);
+            }
+            catch (Exception ex)
+            {
+                // dont care
+            }
+
+            return result;
         }
 
         private string Validate(string xml)

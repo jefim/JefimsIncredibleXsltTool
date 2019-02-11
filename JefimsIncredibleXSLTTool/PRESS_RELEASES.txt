@@ -156,3 +156,33 @@ Over and OUT!
 1.9
 
 Dull 1.9 release that only includes the new licensing information.
+
+
+
+1.10
+
+JEFIM'S INCREDIBLE XSLT TOOL 1.10
+
+Sometimes they come back! Your good old XSLT tool dev team (me) is live again and ready to work those 
+features in on an extremely unpredictible schedule. So, here is what's inside:
+
+1. Transform your JSON documents using the brand new JUST engine! Transform them! Just do it!
+2. Pretty print ACTUALLY does pretty print JSON documents (if JSON engine is selected)
+3. Abosutely NO support for JSON highlighting (well, what did you expect? its a work in progress!)
+4. SPlash screen updated to INform you of the new JSON feature
+6. Some new ugly spagetti code introduced
+7. 24kb of new library files! Nowadays you really appreciate when an app is not 500+ megs on your hard 
+   drive so I am putting that as a feature.
+8. On startup "only" 25 megs of RAM on my computer which is pretty rad. Flowdock is 135m and that's an 
+   effing chat app! So you know, that is also a cool feature of this tool.
+9. The Marvelous Mrs. Maisel series is a masterpiece. You'll thank me later.
+10. Did you notice that #5 was missing?
+	Yes) Good job! Keep on noticing stuff!
+	No) Nou hätä, who cares anyway?
+	Non-binary) ... what?..
+
+This release was inspired by Tomi, a Moomin lollipop and indirectly by Jura who apparently made the 
+FRENDS task using that JUST thingy.
+
+Now lets forget about that clownsmanship and get to serious stuff. I urge everyone to use our github repo
+for anything related to this tool. All PR-s are welcome and any feature requests are always a good thing.
