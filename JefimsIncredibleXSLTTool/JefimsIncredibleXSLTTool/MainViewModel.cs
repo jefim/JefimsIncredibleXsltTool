@@ -10,7 +10,6 @@ using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.IO;
 using System.Linq;
-using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows;
@@ -19,21 +18,23 @@ using System.Xml.Linq;
 using System.Xml.Schema;
 using System.Xml.Xsl;
 using JUST;
-using Newtonsoft.Json.Linq;
 using ToastNotifications;
+using ToastNotifications.Lifetime;
+using ToastNotifications.Position;
+using ToastNotifications.Messages;
 using Underscore;
-using WpfApplication2;
 
 namespace JefimsIncredibleXsltTool
 {
+
     public class Observable : INotifyPropertyChanged
     {
         public event PropertyChangedEventHandler PropertyChanged;
 
         protected void OnPropertyChanged(string propertyName)
         {
-            var evt = this.PropertyChanged;
-            if (evt != null) evt(this, new PropertyChangedEventArgs(propertyName));
+            var evt = PropertyChanged;
+            evt?.Invoke(this, new PropertyChangedEventArgs(propertyName));
         }
     }
 
@@ -41,263 +42,210 @@ namespace JefimsIncredibleXsltTool
     {
         Saxon,
         DotNet,
-        JSON_JustNET
+        Just
     }
 
     public class MainViewModel : Observable
     {
-        private Document _document;
-        private readonly TextDocument _xmlToTransformDocument = new TextDocument();
-        private readonly TextDocument _resultingXmlDocument = new TextDocument();
-        private readonly TextDocument _errorsDocument = new TextDocument();
-        private NotificationsSource _notificationSource;
-        private XsltProcessingMode _xsltProcessingMode = XsltProcessingMode.Saxon;
+        public Notifier Notifier = new Notifier(cfg =>
+        {
+            cfg.PositionProvider = new WindowPositionProvider(
+                parentWindow: Application.Current.MainWindow,
+                corner: Corner.TopRight,
+                offsetX: 10,
+                offsetY: 10);
 
-        private readonly ObservableCollection<XsltParameter> _xsltParameters = new ObservableCollection<XsltParameter>();
+            cfg.LifetimeSupervisor = new TimeAndCountBasedLifetimeSupervisor(
+                notificationLifetime: TimeSpan.FromSeconds(3),
+                maximumNotificationCount: MaximumNotificationCount.FromCount(5));
+
+            cfg.Dispatcher = Application.Current.Dispatcher;
+        });
+
+        private Document _document;
+        private XsltProcessingMode _xsltProcessingMode = XsltProcessingMode.Saxon;
         private const string ProgramName = "Jefim's Incredible XSLT Tool";
+        public event EventHandler TransformStarting;
+        public event EventHandler TransformFinished;
+        private readonly JefimsMagicalTranspiler _jefimsMagicalTranspiler = new JefimsMagicalTranspiler();
 
         public MainViewModel()
         {
-            this._xsltParameters = new ObservableCollection<XsltParameter>();
-            this._xsltParameters.CollectionChanged += (a,b) => this.RunTransform();
-            this.Document = new Document();
-            this.XmlToTransformDocument.TextChanged += (a, b) => this.RunTransform();
-            NotificationSource = new NotificationsSource();
+            XsltParameters = new ObservableCollection<XsltParameter>();
+            XsltParameters.CollectionChanged += (a, b) => RunTransform();
+            Document = new Document();
+            XmlToTransformDocument.TextChanged += (a, b) => RunTransform();
         }
 
         public List<XsltProcessingMode> XsltProcessingModes => Enum.GetValues(typeof(XsltProcessingMode)).Cast<XsltProcessingMode>().ToList();
-        
+
         public XsltProcessingMode XsltProcessingMode
         {
-            get { return this._xsltProcessingMode; }
+            get => _xsltProcessingMode;
             set
             {
-                this._xsltProcessingMode = value;
+                _xsltProcessingMode = value;
                 OnPropertyChanged("XsltProcessingMode");
-                this.RunTransform();
+                RunTransform();
             }
         }
 
-
-        public string WindowTitle
-        {
-            get
-            {
-                if(this.Document == null)
-                {
-                    return ProgramName;
-                }
-
-                return $"{this.Document.Display} - {ProgramName}";
-            }
-        }
+        public string WindowTitle => Document == null ? ProgramName : $"{Document.Display} - {ProgramName}";
 
         public Document Document
         {
-            get
-            {
-                return this._document;
-            }
+            get => _document;
             private set
             {
-                if(this._document != null) this._document.TextDocument.TextChanged -= TextDocument_TextChanged;
-                this._document = value;
-                if (this._document != null)
+                if (_document != null) _document.TextDocument.TextChanged -= TextDocument_TextChanged;
+                _document = value;
+                if (_document != null)
                 {
-                    this._document.TextDocument.TextChanged += TextDocument_TextChanged;
-                    this.UseSyntaxSugar = this._document.TextDocument.Text.StartsWith(XsltStylesheetSugar.Keyword);
-                    this.RunTransform();
+                    _document.TextDocument.TextChanged += TextDocument_TextChanged;
+                    UseSyntaxSugar = _document.TextDocument.Text.StartsWith(XsltStylesheetSugar.Keyword);
+                    RunTransform();
                 }
 
-                this.OnPropertyChanged("Document");
-                this.OnPropertyChanged("WindowTitle");
+                OnPropertyChanged("Document");
+                OnPropertyChanged("WindowTitle");
             }
         }
 
         private void TextDocument_TextChanged(object sender, EventArgs e)
         {
-            this.RunTransform();
-            this.OnPropertyChanged("WindowTitle");
+            RunTransform();
+            OnPropertyChanged("WindowTitle");
         }
 
-        public TextDocument XmlToTransformDocument
-        {
-            get
-            {
-                return this._xmlToTransformDocument;
-            }
-        }
-        
-        public TextDocument ResultingXmlDocument
-        {
-            get
-            {
-                return this._resultingXmlDocument;
-            }
-        }
+        public TextDocument XmlToTransformDocument { get; } = new TextDocument();
 
-        private bool _useSyntaxSugar = false;
-        public bool UseSyntaxSugar {
-            get
-            {
-                return this._useSyntaxSugar;
-            }
+        public TextDocument ResultingXmlDocument { get; } = new TextDocument();
+
+        private bool _useSyntaxSugar;
+        public bool UseSyntaxSugar
+        {
+            get => _useSyntaxSugar;
             set
             {
-                if (this._useSyntaxSugar != value)
+                if (_useSyntaxSugar == value) return;
+                _useSyntaxSugar = value;
+                OnPropertyChanged("UseSyntaxSugar");
+                Application.Current.Dispatcher.BeginInvoke(new Action(() =>
                 {
-                    this._useSyntaxSugar = value;
-                    OnPropertyChanged("UseSyntaxSugar");
-                    Application.Current.Dispatcher.BeginInvoke(new Action(() =>
+                    try
                     {
-                        try
-                        {
-                            if (value)
-                            {
-                                this.Document.TextDocument.Text = this._jefimsMagicalTranspiler.PureXsltToXsltWithSugar(this.Document.TextDocument.Text);
-                            }
-                            else
-                            {
-                                this.Document.TextDocument.Text = this._jefimsMagicalTranspiler.XsltWithSugarToPureXslt(this.Document.TextDocument.Text);
-                            }
-                        }
-                        catch (Exception ex)
-                        {
-                            MessageBox.Show(ex.ToString());
-                        }
-                    }));
-
-                    //this.RunTransform();
-                }
+                        Document.TextDocument.Text = value ? _jefimsMagicalTranspiler.PureXsltToXsltWithSugar(Document.TextDocument.Text) : _jefimsMagicalTranspiler.XsltWithSugarToPureXslt(Document.TextDocument.Text);
+                    }
+                    catch (Exception ex)
+                    {
+                        MessageBox.Show(ex.ToString());
+                    }
+                }));
             }
         }
 
-        public TextDocument ErrorsDocument
-        {
-            get
-            {
-                return this._errorsDocument;
-            }
-        }
+        public TextDocument ErrorsDocument { get; } = new TextDocument();
 
-        public bool ErrorsExist
-        {
-            get { return this.ErrorsDocument.Text.Length > 0; }
-        }
-        public NotificationsSource NotificationSource
-        {
-            get { return _notificationSource; }
-            set
-            {
-                _notificationSource = value;
-                OnPropertyChanged("NotificationSource");
-            }
-        }
+        public bool ErrorsExist => ErrorsDocument.Text.Length > 0;
 
-        public ObservableCollection<XsltParameter> XsltParameters { get { return this._xsltParameters; } }
+        public ObservableCollection<XsltParameter> XsltParameters { get; }
 
         internal void OpenFile(string fileName)
         {
-            this.Document = new Document(fileName);
-            var paramNames = this.ExtractParamsFromXslt(this.Document.TextDocument.Text);
-            this.XsltParameters.Clear();
-            paramNames.ToList().ForEach((o) => this.XsltParameters.Add(new XsltParameter { Name = o }));
+            Document = new Document(fileName);
+            var paramNames = ExtractParamsFromXslt(Document.TextDocument.Text);
+            XsltParameters.Clear();
+            paramNames.ToList().ForEach((o) => XsltParameters.Add(new XsltParameter { Name = o }));
         }
 
         internal void New()
         {
-            if(this.Document != null && this.Document.IsModified)
+            if (Document != null && Document.IsModified)
             {
                 var answer = MessageBox.Show("You have unsaved changes in current document. Discard?", "Warning", MessageBoxButton.OKCancel);
                 if (answer != MessageBoxResult.OK) return;
             }
 
-            this.Document = new Document();
+            Document = new Document();
         }
 
         internal void Save()
         {
-            if (this.Document == null)
+            if (Document == null)
             {
-                this.NotificationSource.Show("No open file. This should not have happened :( Apologies.", NotificationType.Error);
+                Notifier.ShowWarning("No open file. This should not have happened :( Apologies.");
                 return;
             }
 
-            if(this.Document.IsNew)
+            if (Document.IsNew)
             {
-                var ofd = new SaveFileDialog();
-                ofd.Filter = "XSLT|*.xslt|All files|*.*";
-                ofd.RestoreDirectory = true;
-                ofd.Title = "Save new file as...";
-                if(ofd.ShowDialog() == true)
+                var ofd = new SaveFileDialog
                 {
-                    this.Document.FilePath = ofd.FileName;
+                    Filter = "XSLT|*.xslt|All files|*.*",
+                    RestoreDirectory = true,
+                    Title = "Save new file as..."
+                };
+                if (ofd.ShowDialog() == true)
+                {
+                    Document.FilePath = ofd.FileName;
                 }
             }
 
             try
             {
-                this.Document.Save();
-                this.NotificationSource.Show("Saved! ☃", NotificationType.Information);
+                Document.Save();
+                Notifier.ShowSuccess("Saved! ☃");
             }
             catch (Exception ex)
             {
-                this.NotificationSource.Show(ex.ToString(), NotificationType.Error);
+                Notifier.ShowError(ex.ToString());
             }
         }
 
-        public event EventHandler TransformStarting;
-        public event EventHandler TransformFinished;
-
         protected void OnTransformStarting()
         {
-            var evt = this.TransformStarting;
-            if (evt != null) evt(this, EventArgs.Empty);
+            var evt = TransformStarting;
+            evt?.Invoke(this, EventArgs.Empty);
         }
 
         protected void OnTransformFinished()
         {
-            var evt = this.TransformFinished;
-            if (evt != null) evt(this, EventArgs.Empty);
+            var evt = TransformFinished;
+            evt?.Invoke(this, EventArgs.Empty);
         }
 
         /// <summary>
         /// Preventively checks for possible SO exception to avoid crashes.
         /// </summary>
-        /// <param name="XSLT"></param>
+        /// <param name="xslt"></param>
         /// <returns></returns>
-        public static string CheckForStackoverflow(string XSLT)
+        public static string CheckForStackoverflow(string xslt)
         {
-            var xpath = "//*[local-name()='apply-templates']/@select";
-            XmlDocument doc = new XmlDocument();
-            doc.LoadXml(XSLT);
+            var doc = new XmlDocument();
+            doc.LoadXml(xslt);
             XmlNode root = doc.DocumentElement;
 
-            var nodes = root.SelectNodes(xpath);
-            var result = new List<string>();
-            bool foundRefToRoot = false;
+            var nodes = root?.SelectNodes("//*[local-name()='apply-templates']/@select");
+            var foundRefToRoot = false;
             foreach (var node in nodes)
             {
-                if (((XmlAttribute)node).Value == "/")
-                {
-                    foundRefToRoot = true;
-                    break;
-                }
+                if (((XmlAttribute)node).Value != "/") continue;
+                foundRefToRoot = true;
+                break;
             }
 
             return foundRefToRoot ? "Prevented a StackOverflowException - you have an apply-templates element with select=\"/\" attribute in XSLT" : null;
         }
 
-        private IEnumerable<string> ExtractParamsFromXslt(string xslt)
+        private static IEnumerable<string> ExtractParamsFromXslt(string xslt)
         {
             try
             {
-                var xpath = "//*[local-name()='param']/@name";
-                XmlDocument doc = new XmlDocument();
+                var doc = new XmlDocument();
                 doc.LoadXml(xslt);
                 XmlNode root = doc.DocumentElement;
 
-                var nodes = root.SelectNodes(xpath);
+                var nodes = root?.SelectNodes("//*[local-name()='param']/@name");
                 var result = new List<string>();
                 foreach (var node in nodes)
                 {
@@ -315,76 +263,73 @@ namespace JefimsIncredibleXsltTool
 
         internal void UpdateConcoctionsUsingFlag()
         {
-            if (this.Document != null && this.Document.TextDocument != null)
+            if (Document?.TextDocument != null)
             {
-                this.UseSyntaxSugar = this._document.TextDocument.Text.StartsWith(XsltStylesheetSugar.Keyword);
+                UseSyntaxSugar = _document.TextDocument.Text.StartsWith(XsltStylesheetSugar.Keyword);
             }
         }
 
-        Func<Task<bool>> _debouncedRunTransform = null;
+        private Func<Task<bool>> _debouncedRunTransform;
 
         public void RunTransform()
         {
             if (_debouncedRunTransform == null)
             {
-                _debouncedRunTransform = _.Function.Debounce(() => this.RunTransformImpl(), 200);
+                _debouncedRunTransform = _.Function.Debounce(RunTransformImpl, 200);
             }
 
             _debouncedRunTransform();
         }
 
-        private JefimsMagicalTranspiler _jefimsMagicalTranspiler = new JefimsMagicalTranspiler();
-
         public bool RunTransformImpl()
         {
-            if (this.XmlToTransformDocument == null || this.Document == null || this.Document.TextDocument == null || string.IsNullOrWhiteSpace(this.Document.TextDocument.Text))
+            if (XmlToTransformDocument == null || string.IsNullOrWhiteSpace(Document?.TextDocument?.Text))
                 return false;
 
-            var xml = this.XmlToTransformDocument.Text;
-            var xslt = this.Document.TextDocument.Text;
+            var xml = XmlToTransformDocument.Text;
+            var xslt = Document.TextDocument.Text;
             Task.Factory.StartNew(() =>
             {
                 try
                 {
-                    this.OnTransformStarting();
-                    if(this.UseSyntaxSugar)
+                    OnTransformStarting();
+                    if (UseSyntaxSugar)
                     {
                         xslt = _jefimsMagicalTranspiler.XsltWithSugarToPureXslt(xslt);
                     }
 
                     string result = null;
-                    switch (this.XsltProcessingMode)
+                    switch (XsltProcessingMode)
                     {
                         case XsltProcessingMode.Saxon:
-                            result = XsltTransformSaxon(xml, xslt, this.XsltParameters.Where(o => o != null && o.Name != null).ToArray());
+                            result = XsltTransformSaxon(xml, xslt, XsltParameters.Where(o => o?.Name != null).ToArray());
                             break;
                         case XsltProcessingMode.DotNet:
-                            result = XsltTransformDotNet(xml, xslt, this.XsltParameters.Where(o => o != null && o.Name != null).ToArray());
+                            result = XsltTransformDotNet(xml, xslt, XsltParameters.Where(o => o?.Name != null).ToArray());
                             break;
-                        case XsltProcessingMode.JSON_JustNET:
-                            result = JsonTransformUsingJustNET(xml, xslt,
-                                this.XsltParameters.Where(o => o != null && o.Name != null).ToArray());
+                        case XsltProcessingMode.Just:
+                            result = JsonTransformUsingJustNet(xml, xslt);
                             break;
                         default:
-                            MessageBox.Show("Unknown transform method: " + this.XsltProcessingMode);
+                            MessageBox.Show("Unknown transform method: " + XsltProcessingMode);
                             break;
                     }
-                    
-                    var validation = this.Validate(result);
+
+                    var validation = Validate(result);
                     if (validation != null)
                     {
                         Application.Current.Dispatcher.BeginInvoke(new Action(() =>
                         {
-                            this.ResultingXmlDocument.Text = result;
-                            this.ErrorsDocument.Text = validation;
+                            ResultingXmlDocument.Text = result;
+                            ErrorsDocument.Text = validation;
                         }));
                     }
                     else
                     {
                         Application.Current.Dispatcher.BeginInvoke(new Action(() =>
                         {
-                            this.ResultingXmlDocument.Text = result;
-                            this.ErrorsDocument.Text = string.Empty;
+                            ResultingXmlDocument.Text = result;
+                            ErrorsDocument.Text = string.Empty;
                         }));
                     }
                 }
@@ -392,15 +337,15 @@ namespace JefimsIncredibleXsltTool
                 {
                     Application.Current.Dispatcher.BeginInvoke(new Action(() =>
                     {
-                        this.ErrorsDocument.Text = ex.ToString();
+                        ErrorsDocument.Text = ex.ToString();
                     }));
                 }
                 finally
                 {
                     Application.Current.Dispatcher.BeginInvoke(new Action(() =>
                     {
-                       this.OnPropertyChanged("ErrorsExist");
-                        this.OnTransformFinished();
+                        OnPropertyChanged("ErrorsExist");
+                        OnTransformFinished();
                     }));
                 }
             });
@@ -408,31 +353,16 @@ namespace JefimsIncredibleXsltTool
             return true;
         }
 
-        private string JsonTransformUsingJustNET(string json, string transformer, XsltParameter[] toArray)
-        {
-            var result = JsonTransformer.Transform(transformer, json);
-            try
-            {
-                result = MainWindow.PrettyJson(result);
-            }
-            catch (Exception ex)
-            {
-                // dont care
-            }
-
-            return result;
-        }
-
         private string Validate(string xml)
         {
-            if (string.IsNullOrWhiteSpace(this.ValidationSchemaFile)) return null;
+            if (string.IsNullOrWhiteSpace(ValidationSchemaFile)) return null;
             if (string.IsNullOrWhiteSpace(xml)) return null;
-            XmlSchemaSet schemas = new XmlSchemaSet();
-            var schema = XmlSchema.Read(new XmlTextReader(this.ValidationSchemaFile), null);
+            var schemas = new XmlSchemaSet();
+            var schema = XmlSchema.Read(new XmlTextReader(ValidationSchemaFile), null);
             schemas.Add(schema);
 
-            XDocument doc = XDocument.Parse(xml);
-            
+            var doc = XDocument.Parse(xml);
+
             string message = null;
             doc.Validate(schemas, (o, e) =>
             {
@@ -444,82 +374,55 @@ namespace JefimsIncredibleXsltTool
 
         private string _validationSchemaFile;
 
-        public string ValidationSchemaFile { get { return this._validationSchemaFile; } set
+        public string ValidationSchemaFile
+        {
+            get => _validationSchemaFile;
+            set
             {
-                this._validationSchemaFile = value;
+                _validationSchemaFile = value;
                 OnPropertyChanged("ValidationSchemaFile");
             }
         }
 
-        public static string XsltTransformDotNet(string xmlString, string XSLT, XsltParameter[] XSLTParameters)
+        public static string XsltTransformDotNet(string xmlString, string xslt, XsltParameter[] xsltParameters)
         {
-            var error = CheckForStackoverflow(XSLT);
+            var error = CheckForStackoverflow(xslt);
             if (error != null) return error;
 
-            using (var stringReader = new StringReader(XSLT))
+            using (var xmlDocumenOut = new StringWriter())
+            using (StringReader xmlReader = new StringReader(xmlString), xsltReader = new StringReader(xslt))
+            using (XmlReader xmlDocument = XmlReader.Create(xmlReader), xsltDocument = XmlReader.Create(xsltReader))
             {
-                var inputStream = new MemoryStream(Encoding.UTF8.GetBytes(xmlString));
-                using (XmlReader reader = XmlReader.Create(new StringReader(XSLT)), Inputdocument = XmlReader.Create(new StringReader(xmlString)))
+                var xsltSettings = new XsltSettings(true, true);
+                var myXslTransform = new XslCompiledTransform();
+                myXslTransform.Load(xsltDocument, xsltSettings, new XmlUrlResolver());
+                var argsList = new XsltArgumentList();
+                xsltParameters?.ToList().ForEach(x => argsList.AddParam(x.Name, "", x.Value));
+                using (var xmlTextWriter = XmlWriter.Create(xmlDocumenOut, myXslTransform.OutputSettings))
                 {
-                    XsltSettings xslt_settings = new XsltSettings(true, true);
-                    XslCompiledTransform myXslTransform = new XslCompiledTransform();
-                    myXslTransform.Load(reader, xslt_settings, new XmlUrlResolver());
-                    XsltArgumentList argsList = new XsltArgumentList();
-                    if (XSLTParameters != null)
-                        XSLTParameters.ToList().ForEach(x => argsList.AddParam(x.Name, "", x.Value));
-                    MemoryStream memoryStream = new MemoryStream();
-                    using (XmlWriter xmlTextWriter = XmlWriter.Create(memoryStream, myXslTransform.OutputSettings))
-                    {
-                        myXslTransform.Transform(Inputdocument, argsList, xmlTextWriter);
-                        Encoding UTF8WithoutBom = myXslTransform.OutputSettings.Encoding; // Encoding.UTF8;
-                        var output = UTF8WithoutBom.GetString(memoryStream.ToArray());
-                        output = output.Replace("\n", Environment.NewLine);
-                        output = output.Trim(new char[] { '\uFEFF' }); // removu utf-16 bom
-                        return output;
-                    }
+                    myXslTransform.Transform(xmlDocument, argsList, xmlTextWriter);
+                    return xmlDocumenOut.ToString().Replace("\n", Environment.NewLine).Trim('\uFEFF');
                 }
             }
         }
 
-        public static string XsltTransformSaxon(dynamic Input, string XSLT, XsltParameter[] XSLTParameters)
+        public static string XsltTransformSaxon(string xmlString, string xslt, XsltParameter[] xsltParameters)
         {
-            string BaseUri = "";
+            var error = CheckForStackoverflow(xslt);
+            if (error != null) return error;
+
             var processor = new Processor();
             var compiler = processor.NewXsltCompiler();
             compiler.ErrorList = new List<object>();
-            var xmlString = "";
 
-            if (Input.GetType() == typeof(string))
+            using (var xmlDocumenOut = new StringWriter())
+            using (var xsltReader = new StringReader(xslt))
+            using (var xmlStream = new MemoryStream(Encoding.UTF8.GetBytes(xmlString)))
             {
-                xmlString = (string)Input;
-            }
-            else if (Input.GetType() == typeof(XmlDocument))
-            {
-                var xmlDoc = (XmlDocument)Input;
-                using (var stringWriter = new StringWriter())
-                using (var xmlTextWriter = XmlWriter.Create(stringWriter))
-                {
-                    xmlDoc.WriteTo(xmlTextWriter);
-                    xmlTextWriter.Flush();
-                    xmlString = stringWriter.GetStringBuilder().ToString();
-                    //new ICSharpCode.AvalonEdit.TextEditor
-                }
-            }
-            else
-            {
-                throw new FormatException("Unsupported input type. The supported types are XmlDocument and String.");
-            }
-
-            var error = CheckForStackoverflow(XSLT);
-            if (error != null) return error;
-
-
-            using (var stringReader = new StringReader(XSLT))
-            {
-                XsltExecutable executable = null;
+                XsltExecutable executable;
                 try
                 {
-                    executable = compiler.Compile(stringReader);
+                    executable = compiler.Compile(xsltReader);
                 }
                 catch (Exception ex)
                 {
@@ -530,28 +433,23 @@ namespace JefimsIncredibleXsltTool
                     {
                         throw;
                     }
-                    else
-                    {
-                        throw new Exception(ex.Message, new Exception(errorsStr));
-                    }
+                    throw new Exception(ex.Message, new Exception(errorsStr));
                 }
-                var transformer = executable.Load();
-                var inputStream = new MemoryStream(Encoding.UTF8.GetBytes(xmlString));
-                var uri = string.IsNullOrEmpty(BaseUri) ? new Uri("file://") : new Uri(BaseUri);
-                transformer.SetInputStream(inputStream, uri);
-                if (XSLTParameters != null)
-                    XSLTParameters.ToList().ForEach(x => transformer.SetParameter(new QName(x.Name), new XdmAtomicValue(x.Value)));
 
-                using (var stringWriter = new StringWriter())
-                {
-                    var serializer = new Serializer();
-                    serializer.SetOutputWriter(stringWriter);
-                    transformer.Run(serializer);
-                    var output = stringWriter.GetStringBuilder().ToString();
-                    output = output.Replace("\n", Environment.NewLine);
-                    return output;
-                }
+                var transformer = executable.Load();
+                transformer.SetInputStream(xmlStream, new Uri("file://"));
+                xsltParameters?.ToList().ForEach(x => transformer.SetParameter(new QName(x.Name), new XdmAtomicValue(x.Value)));
+
+                var serializer = new Serializer();
+                serializer.SetOutputWriter(xmlDocumenOut);
+                transformer.Run(serializer);
+                return xmlDocumenOut.ToString().Replace("\n", Environment.NewLine);
             }
+        }
+
+        private static string JsonTransformUsingJustNet(string json, string transformer)
+        {
+            return MainWindow.PrettyJson(JsonTransformer.Transform(transformer, json));
         }
     }
 
@@ -563,45 +461,39 @@ namespace JefimsIncredibleXsltTool
 
         public Document()
         {
-            this.IsNew = true;
+            IsNew = true;
             var contents = string.Empty;
-            this._originalContents = string.Empty;
-            this.TextDocument = new TextDocument(new StringTextSource(contents));
+            _originalContents = string.Empty;
+            TextDocument = new TextDocument(new StringTextSource(contents));
         }
 
         public Document(string filePath)
         {
-            this.IsNew = false;
-            this.FilePath = filePath;
-            var contents = File.ReadAllText(this.FilePath);
-            this._originalContents = contents;
-            this.TextDocument = new TextDocument(new StringTextSource(contents));
-            this.TextDocument.Changed += TextDocument_Changed;
+            IsNew = false;
+            FilePath = filePath;
+            var contents = File.ReadAllText(FilePath);
+            _originalContents = contents;
+            TextDocument = new TextDocument(new StringTextSource(contents));
+            TextDocument.Changed += TextDocument_Changed;
         }
 
         private void TextDocument_Changed(object sender, DocumentChangeEventArgs e)
         {
-            this.OnPropertyChanged("Display");
-            this.OnPropertyChanged("IsModified");
+            OnPropertyChanged("Display");
+            OnPropertyChanged("IsModified");
         }
 
         public bool IsNew { get; private set; }
 
-        public bool IsModified
-        {
-            get
-            {
-                return this.TextDocument != null && this.TextDocument.Text != this._originalContents;
-            }
-        }
+        public bool IsModified => TextDocument != null && TextDocument.Text != _originalContents;
 
         public TextDocument TextDocument
         {
-            get { return this._textDocument; }
+            get => _textDocument;
             private set
             {
-                this._textDocument = value;
-                this.OnPropertyChanged("TextDocument");
+                _textDocument = value;
+                OnPropertyChanged("TextDocument");
             }
         }
 
@@ -609,36 +501,36 @@ namespace JefimsIncredibleXsltTool
         {
             get
             {
-                var result = this.IsNew ? "Unsaved document" : Path.GetFileName(this.FilePath);
-                if (this.IsModified) result += " *";
+                var result = IsNew ? "Unsaved document" : Path.GetFileName(FilePath);
+                if (IsModified) result += " *";
                 return result;
             }
         }
 
         public string FilePath
         {
-            get { return this._filePath; }
+            get => _filePath;
             set
             {
-                this._filePath = value;
-                this.IsNew = false;
-                this.OnPropertyChanged("FilePath");
-                this.OnPropertyChanged("Display");
+                _filePath = value;
+                IsNew = false;
+                OnPropertyChanged("FilePath");
+                OnPropertyChanged("Display");
             }
         }
-        
+
         internal void Save()
         {
-            if (this.FilePath == null)
+            if (FilePath == null)
             {
                 MessageBox.Show("No file path for saving");
                 return;
             }
-            File.WriteAllText(this.FilePath, this.TextDocument.Text);
-            this.IsNew = false;
-            this._originalContents = this.TextDocument.Text;
-            this.OnPropertyChanged("IsModified");
-            this.OnPropertyChanged("Display");
+            File.WriteAllText(FilePath, TextDocument.Text);
+            IsNew = false;
+            _originalContents = TextDocument.Text;
+            OnPropertyChanged("IsModified");
+            OnPropertyChanged("Display");
         }
     }
 }

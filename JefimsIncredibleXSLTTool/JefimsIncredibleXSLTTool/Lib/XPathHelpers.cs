@@ -1,10 +1,6 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Text;
-using System.Text.RegularExpressions;
-using System.Threading.Tasks;
 using System.Xml;
 using System.Xml.Linq;
 
@@ -26,13 +22,12 @@ namespace JefimsIncredibleXsltTool.Lib
                     if (lineInfo.LineNumber == line && lineInfoLinePositionFixed > column) continue;
                     if (bestCandidate == null) bestCandidate = ancestor;
                     var bestCandidateLineInfo = (IXmlLineInfo)bestCandidate;
-                    if ((line - bestCandidateLineInfo.LineNumber) > (line - lineInfo.LineNumber)) bestCandidate = ancestor;
-                    if ((line - bestCandidateLineInfo.LineNumber) == (line - lineInfo.LineNumber) && (column - lineInfoLinePositionFixed) > (column - lineInfoLinePositionFixed)) bestCandidate = ancestor;
+                    if (line - bestCandidateLineInfo.LineNumber > line - lineInfo.LineNumber) bestCandidate = ancestor;
                 }
                 return bestCandidate;
             }
         }
-        
+
         /// <summary>
         /// Get the absolute XPath to a given XElement
         /// (e.g. "/people/person[6]/name[1]/last[1]").
@@ -44,37 +39,23 @@ namespace JefimsIncredibleXsltTool.Lib
                 throw new ArgumentNullException("element");
             }
 
-            Func<XElement, string> relativeXPath = e =>
+            string RelativeXPath(XElement e)
             {
-                int index = includeIndexes ? IndexPosition(e) : -1;
-
+                var index = includeIndexes ? IndexPosition(e) : -1;
                 var currentNamespace = e.Name.Namespace;
-
-                string name;
-                if (currentNamespace == null)
-                {
-                    name = e.Name.LocalName;
-                }
-                else
-                {
-                    string namespacePrefix = e.GetPrefixOfNamespace(currentNamespace);
-                    name = namespacePrefix + (string.IsNullOrWhiteSpace(namespacePrefix) ? "" : ":") + e.Name.LocalName;
-                }
+                
+                var namespacePrefix = e.GetPrefixOfNamespace(currentNamespace);
+                var name = namespacePrefix + (string.IsNullOrWhiteSpace(namespacePrefix) ? "" : ":") + e.Name.LocalName;
 
                 // If the element is the root, no index is required
-                return (index == -1) ? "/" + name : string.Format
-                (
-                    "/{0}[{1}]",
-                    name,
-                    index.ToString()
-                );
-            };
+                return (index == -1) ? "/" + name : $"/{name}[{index}]";
+            }
 
             var ancestors = from e in element.Ancestors()
-                            select relativeXPath(e);
+                            select RelativeXPath(e);
 
             return string.Concat(ancestors.Reverse().ToArray()) +
-                   relativeXPath(element);
+                   RelativeXPath(element);
         }
 
         /// <summary>
@@ -97,7 +78,7 @@ namespace JefimsIncredibleXsltTool.Lib
                 return -1;
             }
 
-            int i = 1; // Indexes for nodes start at 1, not 0
+            var i = 1; // Indexes for nodes start at 1, not 0
 
             foreach (var sibling in element.Parent.Elements(element.Name))
             {

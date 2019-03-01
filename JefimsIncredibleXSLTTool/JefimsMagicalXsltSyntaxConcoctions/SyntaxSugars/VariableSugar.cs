@@ -1,21 +1,10 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Text.RegularExpressions;
-using System.Threading.Tasks;
+﻿using System.Text.RegularExpressions;
 
 namespace JefimsMagicalXsltSyntaxConcoctions.SyntaxSugars
 {
     public class VariableSugar : ISyntaxSugar
     {
-        public int Priority
-        {
-            get
-            {
-                return 1;
-            }
-        }
+        public int Priority => 1;
 
         public string PureXsltToXsltWithSugar(string pureXslt)
         {

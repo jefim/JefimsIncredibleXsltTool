@@ -2,22 +2,14 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace JefimsMagicalXsltSyntaxConcoctions
 {
     public class JefimsMagicalTranspiler : ISyntaxSugar
     {
-        public int Priority
-        {
-            get
-            {
-                return 1;
-            }
-        }
+        public int Priority => 1;
 
-        private List<ISyntaxSugar> _sugars = new List<ISyntaxSugar>
+        private readonly List<ISyntaxSugar> _sugars = new List<ISyntaxSugar>
         {
             new XsltStylesheetSugar(),
             new ValueOfSugar(),
@@ -30,7 +22,7 @@ namespace JefimsMagicalXsltSyntaxConcoctions
         {
             var result = pureXslt;
             var exceptions = new List<SyntaxException>();
-            foreach(var sugar in this._sugars.OrderBy(o => o.Priority))
+            foreach(var sugar in _sugars.OrderBy(o => o.Priority))
             {
                 try {
                     result = sugar.PureXsltToXsltWithSugar(result);
@@ -50,7 +42,7 @@ namespace JefimsMagicalXsltSyntaxConcoctions
         {
             var result = xsltWithSugar;
             var exceptions = new List<SyntaxException>();
-            foreach (var sugar in this._sugars.OrderBy(o => o.Priority))
+            foreach (var sugar in _sugars.OrderBy(o => o.Priority))
             {
                 try
                 {

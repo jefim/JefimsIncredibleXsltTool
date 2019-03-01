@@ -15,7 +15,7 @@
             get { return _name; }
             set
             {
-                this._name = value;
+                _name = value;
                 OnPropertyChanged("Name");
             }
         }
@@ -24,7 +24,7 @@
             get { return _value; }
             set
             {
-                this._value = value;
+                _value = value;
                 OnPropertyChanged("Value");
             }
         }
