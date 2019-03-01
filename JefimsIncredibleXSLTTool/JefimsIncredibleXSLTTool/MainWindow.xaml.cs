@@ -142,7 +142,7 @@ namespace JefimsIncredibleXsltTool
             }
             catch
             {
-                Console.WriteLine("Folding error");
+                Console.WriteLine(@"Folding error");
             }
         }
 
@@ -233,7 +233,6 @@ namespace JefimsIncredibleXsltTool
 
         private void Load()
         {
-
             try
             {
                 FoldingManager.Uninstall(_sourceXsltFoldingManager);
@@ -350,10 +349,11 @@ namespace JefimsIncredibleXsltTool
             {
                 var xpath = GetXmlXPath(true);
                 Clipboard.SetText(xpath);
+                _mainViewModel.Notifier.ShowSuccess("XPath copied. \\o/");
             }
             catch (Exception ex)
             {
-                MessageBox.Show(ex.ToString());
+                _mainViewModel.Notifier.ShowError("Failed to copy XPath: "+ ex.Message);
             }
         }
 
@@ -363,10 +363,11 @@ namespace JefimsIncredibleXsltTool
             {
                 var xpath = GetXmlXPath(false);
                 Clipboard.SetText(xpath);
+                _mainViewModel.Notifier.ShowSuccess("XPath copied. Yay!");
             }
             catch (Exception ex)
             {
-                MessageBox.Show(ex.ToString());
+                _mainViewModel.Notifier.ShowError("Failed to copy XPath: " + ex.Message);
             }
         }
 
@@ -386,10 +387,11 @@ namespace JefimsIncredibleXsltTool
             {
                 var xpath = GetXmlXPath(false);
                 Clipboard.SetText(xpath);
+                _mainViewModel.Notifier.ShowSuccess("XPath copied. Wohoo!");
             }
             catch (Exception ex)
             {
-                MessageBox.Show(ex.ToString());
+                _mainViewModel.Notifier.ShowError("Failed to copy XPath: " + ex.Message);
             }
         }
 
@@ -399,10 +401,11 @@ namespace JefimsIncredibleXsltTool
             {
                 var xpath = GetXmlXPath(true);
                 Clipboard.SetText(xpath);
+                _mainViewModel.Notifier.ShowSuccess("XPath copied. \\o/");
             }
             catch (Exception ex)
             {
-                MessageBox.Show(ex.ToString());
+                _mainViewModel.Notifier.ShowError("Failed to copy XPath: " + ex.Message);
             }
         }
 
@@ -411,10 +414,11 @@ namespace JefimsIncredibleXsltTool
             try
             {
                 SourceXml.Document.Text = _mainViewModel.XsltProcessingMode == XsltProcessingMode.Just ? PrettyJson(SourceXml.Document.Text) : PrettyXml(SourceXml.Document.Text);
+                _mainViewModel.Notifier.ShowSuccess("Uuuhh, so pretty!");
             }
             catch (Exception ex)
             {
-                MessageBox.Show(ex.ToString());
+                _mainViewModel.Notifier.ShowError("Failed to pretty print: " + ex.Message);
             }
         }
 
@@ -423,10 +427,11 @@ namespace JefimsIncredibleXsltTool
             try
             {
                 SourceXslt.Document.Text = _mainViewModel.XsltProcessingMode == XsltProcessingMode.Just ? PrettyJson(SourceXslt.Document.Text) : PrettyXml(SourceXslt.Document.Text);
+                _mainViewModel.Notifier.ShowSuccess("It's beautiful!");
             }
             catch (Exception ex)
             {
-                MessageBox.Show(ex.ToString());
+                _mainViewModel.Notifier.ShowError("Failed to pretty print: " + ex.Message);
             }
         }
 

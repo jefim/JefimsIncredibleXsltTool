@@ -26,7 +26,6 @@ using Underscore;
 
 namespace JefimsIncredibleXsltTool
 {
-
     public class Observable : INotifyPropertyChanged
     {
         public event PropertyChangedEventHandler PropertyChanged;
@@ -337,7 +336,7 @@ namespace JefimsIncredibleXsltTool
                 {
                     Application.Current.Dispatcher.BeginInvoke(new Action(() =>
                     {
-                        ErrorsDocument.Text = ex.ToString();
+                        ErrorsDocument.Text = ex.Message;
                     }));
                 }
                 finally
