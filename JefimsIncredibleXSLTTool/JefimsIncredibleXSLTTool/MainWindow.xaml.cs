@@ -181,33 +181,6 @@ namespace JefimsIncredibleXsltTool
             }
         }
 
-        private void ButtonCopyEscapedXslt_Click(object sender, RoutedEventArgs e)
-        {
-            var text = _mainViewModel.Document.TextDocument.Text;
-            text = text.Replace("\"", "\"\"");
-            text = "@\"" + text + "\"";
-            try
-            {
-                Clipboard.SetText(text);
-                _mainViewModel.Notifier.ShowSuccess("XSLT copied! :)\r\nHave a FRENDly day!");
-            }
-            catch
-            {
-                _mainViewModel.Notifier.ShowError("Could not set clipboard text and saving a tmp file failed... Boohoo :*(");
-            }
-        }
-
-        private void ButtonPasteEscapedXslt_Click(object sender, RoutedEventArgs e)
-        {
-            var text = Clipboard.GetText();
-            text = text.Replace("\"\"", "\"");
-            if (text.StartsWith("@\"")) text = text.Substring(2);
-            if (text.EndsWith("\"")) text = text.Substring(0, text.Length - 1);
-            _mainViewModel.Document.TextDocument.Text = text;
-            _mainViewModel.Notifier.ShowSuccess("XSLT pasted! :)\r\nHave a FRENDly day!");
-        }
-
-
         private void Window_Closing(object sender, System.ComponentModel.CancelEventArgs e)
         {
             if (_mainViewModel.XmlToTransformDocument != null)
