@@ -37,11 +37,11 @@ namespace JefimsIncredibleXsltTool
                 _tmpFolderFoldingOffsets.Clear();
                 while (true)
                 {
-                    var foldedFoldingStart = _outputXmlFoldingManager.GetNextFoldedFoldingStart(cur+1);
+                    var foldedFoldingStart = _outputXmlFoldingManager.GetNextFoldedFoldingStart(cur + 1);
                     if (foldedFoldingStart == -1) break;
                     cur = foldedFoldingStart;
                     var foldings = _outputXmlFoldingManager.GetFoldingsAt(foldedFoldingStart);
-                    foreach(var folding in foldings)
+                    foreach (var folding in foldings)
                     {
                         if (folding.IsFolded) _tmpFolderFoldingOffsets.Add(folding.StartOffset);
 
@@ -52,10 +52,10 @@ namespace JefimsIncredibleXsltTool
             {
                 UpdateFolding();
                 if (_tmpFolderFoldingOffsets == null) return;
-                foreach(var offset in _tmpFolderFoldingOffsets)
+                foreach (var offset in _tmpFolderFoldingOffsets)
                 {
                     var foldingsAtOffset = _outputXmlFoldingManager.GetFoldingsAt(offset);
-                    foreach(var folding in foldingsAtOffset)
+                    foreach (var folding in foldingsAtOffset)
                     {
                         folding.IsFolded = true;
                     }
@@ -75,7 +75,7 @@ namespace JefimsIncredibleXsltTool
 
             _strategy = new XmlFoldingStrategy();
             UpdateFolding();
-            
+
             SourceXslt.TextArea.TextEntering += TextEditor_TextArea_TextEntering;
             SourceXslt.TextArea.TextEntered += TextEditor_TextArea_TextEntered;
             SourceXml.TextArea.KeyUp += (a, b) =>
@@ -113,7 +113,7 @@ namespace JefimsIncredibleXsltTool
                 _completionWindow = null;
             };
         }
-        
+
         private void TextEditor_TextArea_TextEntering(object sender, TextCompositionEventArgs e)
         {
             if (e.Text.Length <= 0 || _completionWindow == null) return;
@@ -150,7 +150,7 @@ namespace JefimsIncredibleXsltTool
         private FoldingManager _sourceXsltFoldingManager;
         private FoldingManager _sourceXmlFoldingManager;
         private readonly FoldingManager _outputXmlFoldingManager;
-        
+
         private void NewCommand_Executed(object sender, ExecutedRoutedEventArgs e)
         {
             FoldingManager.Uninstall(_sourceXsltFoldingManager);
@@ -158,7 +158,7 @@ namespace JefimsIncredibleXsltTool
             _sourceXsltFoldingManager = FoldingManager.Install(SourceXslt.TextArea);
             UpdateFolding();
         }
-        
+
         private void SaveCommand_Executed(object sender, ExecutedRoutedEventArgs e)
         {
             _mainViewModel.Save();
@@ -166,7 +166,7 @@ namespace JefimsIncredibleXsltTool
 
         private void OpenCommand_Executed(object sender, ExecutedRoutedEventArgs e)
         {
-            var ofd = new OpenFileDialog {Filter = "Supported file types|*.xsl;*.xslt|All files|*.*"};
+            var ofd = new OpenFileDialog { Filter = "Supported file types|*.xsl;*.xslt|All files|*.*" };
             if (ofd.ShowDialog() != true) return;
             try
             {
@@ -190,19 +190,13 @@ namespace JefimsIncredibleXsltTool
             {
                 Clipboard.SetText(text);
                 _mainViewModel.Notifier.ShowSuccess("XSLT copied! :)\r\nHave a FRENDly day!");
-            }catch
+            }
+            catch
             {
-                try
-                {
-                    _mainViewModel.Notifier.ShowError("Clipboard threw an exception, but it could've still worked - give it a try! :)\r\nHave a FRENDly day!");
-                }
-                catch
-                {
-                    _mainViewModel.Notifier.ShowError(" not set clipboard text and saving a tmp file failed... Boohoo :*(");
-                }
+                _mainViewModel.Notifier.ShowError("Could not set clipboard text and saving a tmp file failed... Boohoo :*(");
             }
         }
-    
+
         private void ButtonPasteEscapedXslt_Click(object sender, RoutedEventArgs e)
         {
             var text = Clipboard.GetText();
@@ -212,7 +206,7 @@ namespace JefimsIncredibleXsltTool
             _mainViewModel.Document.TextDocument.Text = text;
             _mainViewModel.Notifier.ShowSuccess("XSLT pasted! :)\r\nHave a FRENDly day!");
         }
-        
+
 
         private void Window_Closing(object sender, System.ComponentModel.CancelEventArgs e)
         {
@@ -230,7 +224,7 @@ namespace JefimsIncredibleXsltTool
             {
                 Properties.Settings.Default.xsdPath = _mainViewModel.ValidationSchemaFile;
             }
-            
+
             Properties.Settings.Default.xsltProcessingMode = (int)_mainViewModel.XsltProcessingMode;
             Properties.Settings.Default.useSyntaxConcoctions = _mainViewModel.UseSyntaxSugar;
 
@@ -265,7 +259,7 @@ namespace JefimsIncredibleXsltTool
                 }
 
                 _mainViewModel.XsltProcessingMode = (XsltProcessingMode)Properties.Settings.Default.xsltProcessingMode;
-                
+
                 _mainViewModel.UpdateConcoctionsUsingFlag();
 
                 _sourceXmlFoldingManager = FoldingManager.Install(SourceXml.TextArea);
@@ -298,7 +292,7 @@ namespace JefimsIncredibleXsltTool
                 new HighlightingRule
                 {
                     Regex = new Regex("#param"),
-                    Color = new HighlightingColor{ Foreground = new SimpleHighlightingBrush(color), FontWeight = fontWeight, FontStyle = FontStyles.Italic }
+                    Color = new HighlightingColor { Foreground = new SimpleHighlightingBrush(color), FontWeight = fontWeight, FontStyle = FontStyles.Italic }
                 });
             SourceXml.SyntaxHighlighting.MainRuleSet.Rules.Add(
                 new HighlightingRule
@@ -357,7 +351,7 @@ namespace JefimsIncredibleXsltTool
                 var xpath = GetXmlXPath(true);
                 Clipboard.SetText(xpath);
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
                 MessageBox.Show(ex.ToString());
             }
@@ -375,7 +369,7 @@ namespace JefimsIncredibleXsltTool
                 MessageBox.Show(ex.ToString());
             }
         }
-        
+
         private void SourceXml_MouseRightButtonDown(object sender, MouseButtonEventArgs e)
         {
             var textEditor = sender as ICSharpCode.AvalonEdit.TextEditor;
@@ -423,7 +417,7 @@ namespace JefimsIncredibleXsltTool
                 MessageBox.Show(ex.ToString());
             }
         }
-        
+
         private void ButtonPrettyPrintXslt_Click(object sender, RoutedEventArgs e)
         {
             try
