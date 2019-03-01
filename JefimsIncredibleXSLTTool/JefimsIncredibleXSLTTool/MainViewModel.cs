@@ -192,8 +192,8 @@ namespace JefimsIncredibleXsltTool
 
             try
             {
-                Document.Save();
-                Notifier.ShowSuccess("Saved! ☃");
+                if (Document.Save())
+                    Notifier.ShowSuccess("Saved! ☃");
             }
             catch (Exception ex)
             {
@@ -518,18 +518,18 @@ namespace JefimsIncredibleXsltTool
             }
         }
 
-        internal void Save()
+        internal bool Save()
         {
             if (FilePath == null)
             {
-                MessageBox.Show("No file path for saving");
-                return;
+                return false;
             }
             File.WriteAllText(FilePath, TextDocument.Text);
             IsNew = false;
             _originalContents = TextDocument.Text;
             OnPropertyChanged("IsModified");
             OnPropertyChanged("Display");
+            return true;
         }
     }
 }
