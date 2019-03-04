@@ -94,18 +94,18 @@ namespace JefimsIncredibleXsltTool
 
         private void TextEditor_TextArea_TextEntered(object sender, TextCompositionEventArgs e)
         {
-            if (e.Text != "<" && e.Text != "/") return;
+            if (e.Text != "<") return;
 
             _completionWindow = new CompletionWindow(SourceXslt.TextArea);
             var data = _completionWindow.CompletionList.CompletionData;
             data.Add(new XmlCompletionData("xsl:choose", "xsl:choose></xsl:choose>", "Provides multiple conditional testing in conjunction with the <xsl:otherwise> element and <xsl:when> element."));
-            data.Add(new XmlCompletionData("xsl:for-each", "xsl:for-each select=\"\"></xsl:for-each>", "Applies a template repeatedly, applying it in turn to each node in a set."));
-            data.Add(new XmlCompletionData("xsl:if", "xsl:if test=\"\"></xsl:if>", "Allows simple conditional template fragments."));
+            data.Add(new XmlCompletionData("xsl:for-each", "xsl:for-each select=\"temp\"></xsl:for-each>", "Applies a template repeatedly, applying it in turn to each node in a set."));
+            data.Add(new XmlCompletionData("xsl:if", "xsl:if test=\"temp\"></xsl:if>", "Allows simple conditional template fragments."));
             data.Add(new XmlCompletionData("xsl:otherwise", "xsl:otherwise></xsl:otherwise>", "Provides multiple conditional testing in conjunction with the <xsl:choose> element and <xsl:when> element."));
             data.Add(new XmlCompletionData("xsl:text", "xsl:text></xsl:text>", "Generates text in the output."));
-            data.Add(new XmlCompletionData("xsl:value-of", "xsl:value-of test=\"\"></xsl:value-of>/", "Inserts the value of the selected node as text."));
-            data.Add(new XmlCompletionData("xsl:variable", "xsl:variable select=\"\"></xsl:variable>", "Specifies a value bound in an expression."));
-            data.Add(new XmlCompletionData("xsl:when", "xsl:when test=\"\"></xsl:when>", "Provides multiple conditional testing in conjunction with the <xsl:choose> element and <xsl:otherwise> element."));
+            data.Add(new XmlCompletionData("xsl:value-of", "xsl:value-of select=\"temp\"></xsl:value-of>/", "Inserts the value of the selected node as text."));
+            data.Add(new XmlCompletionData("xsl:variable", "xsl:variable select=\"temp\"></xsl:variable>", "Specifies a value bound in an expression."));
+            data.Add(new XmlCompletionData("xsl:when", "xsl:when test=\"temp\"></xsl:when>", "Provides multiple conditional testing in conjunction with the <xsl:choose> element and <xsl:otherwise> element."));
 
             _completionWindow.Show();
             _completionWindow.Closed += delegate
@@ -124,7 +124,7 @@ namespace JefimsIncredibleXsltTool
                 _completionWindow.CompletionList.RequestInsertion(e);
             }
 
-            if (e.Text[0] == '>')
+            if (e.Text[0] == '>' || e.Text[0] == '/')
             {
                 _completionWindow.Hide();
             }
@@ -326,7 +326,7 @@ namespace JefimsIncredibleXsltTool
             }
             catch (Exception ex)
             {
-                _mainViewModel.Notifier.ShowError("Failed to copy XPath: "+ ex.Message);
+                _mainViewModel.Notifier.ShowError("Failed to copy XPath: " + ex.Message);
             }
         }
 
@@ -415,8 +415,7 @@ namespace JefimsIncredibleXsltTool
 
         private static string PrettyXml(string xml)
         {
-            var doc = XDocument.Parse(xml);
-            return doc.ToString();
+            return XDocument.Parse(xml).ToString();
         }
 
         private void SourceXml_MouseLeftButtonUp(object sender, MouseButtonEventArgs e)
