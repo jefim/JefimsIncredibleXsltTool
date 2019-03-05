@@ -41,10 +41,13 @@ namespace JefimsIncredibleXsltTool
             SearchPanel.Install(SourceXslt);
 
             _strategy = new XmlFoldingStrategy();
+            UpdateFolding();
+
+            _mainViewModel.OnTransformFinished += delegate { UpdateFolding(); };
 
             SourceXslt.TextArea.TextEntering += TextEditor_TextArea_TextEntering;
             SourceXslt.TextArea.TextEntered += TextEditor_TextArea_TextEntered;
-            SourceXml.TextArea.KeyUp += (a, b) =>
+            SourceXml.TextArea.TextEntered += (a, b) =>
             {
                 try
                 {
@@ -57,7 +60,7 @@ namespace JefimsIncredibleXsltTool
                 }
             };
         }
-
+        
         private void TextEditor_TextArea_TextEntered(object sender, TextCompositionEventArgs e)
         {
             if (e.Text != "<") return;

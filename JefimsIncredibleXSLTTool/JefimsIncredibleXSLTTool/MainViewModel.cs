@@ -62,6 +62,8 @@ namespace JefimsIncredibleXsltTool
         private Document _document;
         private XsltProcessingMode _xsltProcessingMode = XsltProcessingMode.Saxon;
         private const string ProgramName = "Jefim's Incredible XSLT Tool";
+        public event EventHandler OnTransformFinished;
+
 
         public MainViewModel()
         {
@@ -97,7 +99,6 @@ namespace JefimsIncredibleXsltTool
                     _document.TextDocument.TextChanged += TextDocument_TextChanged;
                 }
 
-                OnPropertyChanged("Document");
                 OnPropertyChanged("WindowTitle");
             }
         }
@@ -115,6 +116,12 @@ namespace JefimsIncredibleXsltTool
         public TextDocument ErrorsDocument { get; } = new TextDocument();
 
         public bool ErrorsExist => ErrorsDocument.Text.Length > 0;
+
+        protected void TransformFinished()
+        {
+            var evt = OnTransformFinished;
+            evt?.Invoke(this, EventArgs.Empty);
+        }
 
         public ObservableCollection<XsltParameter> XsltParameters { get; }
 
@@ -287,6 +294,7 @@ namespace JefimsIncredibleXsltTool
                     Application.Current.Dispatcher.BeginInvoke(new Action(() =>
                     {
                         OnPropertyChanged("ErrorsExist");
+                        TransformFinished();
                     }));
                 }
             });
