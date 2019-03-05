@@ -1,16 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Text.RegularExpressions;
-using System.Threading;
-using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Input;
-using System.Windows.Media;
 using System.Xml.Linq;
+using ICSharpCode.AvalonEdit;
 using ICSharpCode.AvalonEdit.CodeCompletion;
 using ICSharpCode.AvalonEdit.Folding;
-using ICSharpCode.AvalonEdit.Highlighting;
 using ICSharpCode.AvalonEdit.Search;
 using JefimsIncredibleXsltTool.Lib;
 using Microsoft.Win32;
@@ -103,33 +99,34 @@ namespace JefimsIncredibleXsltTool
             data.Add(new XmlCompletionData("xsl:if", "xsl:if test=\"temp\"></xsl:if>", "Allows simple conditional template fragments."));
             data.Add(new XmlCompletionData("xsl:otherwise", "xsl:otherwise></xsl:otherwise>", "Provides multiple conditional testing in conjunction with the <xsl:choose> element and <xsl:when> element."));
             data.Add(new XmlCompletionData("xsl:text", "xsl:text></xsl:text>", "Generates text in the output."));
-            data.Add(new XmlCompletionData("xsl:value-of", "xsl:value-of select=\"temp\"></xsl:value-of>/", "Inserts the value of the selected node as text."));
+            data.Add(new XmlCompletionData("xsl:value-of", "xsl:value-of select=\"temp\" />", "Inserts the value of the selected node as text."));
             data.Add(new XmlCompletionData("xsl:variable", "xsl:variable select=\"temp\"></xsl:variable>", "Specifies a value bound in an expression."));
             data.Add(new XmlCompletionData("xsl:when", "xsl:when test=\"temp\"></xsl:when>", "Provides multiple conditional testing in conjunction with the <xsl:choose> element and <xsl:otherwise> element."));
 
+            int? offset = 0;
             _completionWindow.Show();
             _completionWindow.Closed += delegate
             {
+                if (_completionWindow?.CompletionList.SelectedItem != null)
+                    offset = _completionWindow.CompletionList.SelectedItem.Text.Length - _completionWindow.CompletionList.SelectedItem.Text.IndexOf('>') - 1;
                 _completionWindow = null;
+            };
+
+            _completionWindow.CompletionList.InsertionRequested += delegate
+            {
+                if (offset != null)
+                    SourceXslt.CaretOffset = SourceXslt.CaretOffset - (int)offset;
             };
         }
 
         private void TextEditor_TextArea_TextEntering(object sender, TextCompositionEventArgs e)
         {
             if (e.Text.Length <= 0 || _completionWindow == null) return;
-            if (!char.IsLetterOrDigit(e.Text[0]) && e.Text[0] != ':' && e.Text[0] != '>' && e.Text[0] != '(')
-            {
-                // Whenever a non-letter is typed while the completion window is open,
-                // insert the currently selected element.
-                _completionWindow.CompletionList.RequestInsertion(e);
-            }
 
             if (e.Text[0] == '>' || e.Text[0] == '/')
             {
-                _completionWindow.Hide();
+                _completionWindow?.Close();
             }
-            // Do not set e.Handled=true.
-            // We still want to insert the character that was typed.
         }
 
         public void UpdateFolding()
@@ -199,7 +196,6 @@ namespace JefimsIncredibleXsltTool
             }
 
             Properties.Settings.Default.xsltProcessingMode = (int)_mainViewModel.XsltProcessingMode;
-            Properties.Settings.Default.useSyntaxConcoctions = _mainViewModel.UseSyntaxSugar;
 
             Properties.Settings.Default.Save();
         }
@@ -232,8 +228,6 @@ namespace JefimsIncredibleXsltTool
 
                 _mainViewModel.XsltProcessingMode = (XsltProcessingMode)Properties.Settings.Default.xsltProcessingMode;
 
-                _mainViewModel.UpdateConcoctionsUsingFlag();
-
                 _sourceXmlFoldingManager = FoldingManager.Install(SourceXml.TextArea);
                 _sourceXsltFoldingManager = FoldingManager.Install(SourceXslt.TextArea);
                 UpdateFolding();
@@ -242,71 +236,6 @@ namespace JefimsIncredibleXsltTool
             {
                 MessageBox.Show(ex.ToString());
             }
-        }
-
-        private void Window_Loaded(object sender, RoutedEventArgs e)
-        {
-            var color = Colors.Blue;
-            var fontWeight = FontWeights.Bold;
-            SourceXml.SyntaxHighlighting.MainRuleSet.Rules.Add(
-                new HighlightingRule
-                {
-                    Regex = new Regex("#here_be_xslt"),
-                    Color = new HighlightingColor { Foreground = new SimpleHighlightingBrush(color), FontWeight = fontWeight, FontStyle = FontStyles.Italic }
-                });
-            SourceXml.SyntaxHighlighting.MainRuleSet.Rules.Add(
-                new HighlightingRule
-                {
-                    Regex = new Regex("#var"),
-                    Color = new HighlightingColor { Foreground = new SimpleHighlightingBrush(color), FontWeight = fontWeight, FontStyle = FontStyles.Italic }
-                });
-            SourceXml.SyntaxHighlighting.MainRuleSet.Rules.Add(
-                new HighlightingRule
-                {
-                    Regex = new Regex("#param"),
-                    Color = new HighlightingColor { Foreground = new SimpleHighlightingBrush(color), FontWeight = fontWeight, FontStyle = FontStyles.Italic }
-                });
-            SourceXml.SyntaxHighlighting.MainRuleSet.Rules.Add(
-                new HighlightingRule
-                {
-                    Regex = new Regex("#choose"),
-                    Color = new HighlightingColor { Foreground = new SimpleHighlightingBrush(color), FontWeight = fontWeight, FontStyle = FontStyles.Italic }
-                });
-            SourceXml.SyntaxHighlighting.MainRuleSet.Rules.Add(
-                new HighlightingRule
-                {
-                    Regex = new Regex("#when"),
-                    Color = new HighlightingColor { Foreground = new SimpleHighlightingBrush(color), FontWeight = fontWeight, FontStyle = FontStyles.Italic }
-                });
-            SourceXml.SyntaxHighlighting.MainRuleSet.Rules.Add(
-                new HighlightingRule
-                {
-                    Regex = new Regex("#else"),
-                    Color = new HighlightingColor { Foreground = new SimpleHighlightingBrush(color), FontWeight = fontWeight, FontStyle = FontStyles.Italic }
-                });
-            SourceXml.SyntaxHighlighting.MainRuleSet.Rules.Add(
-                new HighlightingRule
-                {
-                    Regex = new Regex("#end-else"),
-                    Color = new HighlightingColor { Foreground = new SimpleHighlightingBrush(color), FontWeight = fontWeight, FontStyle = FontStyles.Italic }
-                });
-            SourceXml.SyntaxHighlighting.MainRuleSet.Rules.Add(
-                new HighlightingRule
-                {
-                    Regex = new Regex("#end-choose"),
-                    Color = new HighlightingColor { Foreground = new SimpleHighlightingBrush(color), FontWeight = fontWeight, FontStyle = FontStyles.Italic }
-                });
-            SourceXml.SyntaxHighlighting.MainRuleSet.Rules.Add(
-                new HighlightingRule
-                {
-                    Regex = new Regex("#echo"),
-                    Color = new HighlightingColor { Foreground = new SimpleHighlightingBrush(color), FontWeight = fontWeight, FontStyle = FontStyles.Italic }
-                });
-            Task.Factory.StartNew(() =>
-            {
-                Thread.Sleep(1000);
-                Dispatcher.BeginInvoke(new Action(Load));
-            });
         }
 
         private string GetXmlXPath(bool includeIndexes)
@@ -346,7 +275,7 @@ namespace JefimsIncredibleXsltTool
 
         private void SourceXml_MouseRightButtonDown(object sender, MouseButtonEventArgs e)
         {
-            var textEditor = sender as ICSharpCode.AvalonEdit.TextEditor;
+            var textEditor = sender as TextEditor;
             var position = textEditor?.GetPositionFromPoint(e.GetPosition(textEditor));
             if (position.HasValue)
             {

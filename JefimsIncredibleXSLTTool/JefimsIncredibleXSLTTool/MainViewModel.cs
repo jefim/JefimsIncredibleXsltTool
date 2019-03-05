@@ -1,7 +1,5 @@
 ﻿using ICSharpCode.AvalonEdit.Document;
 using JefimsIncredibleXsltTool.Lib;
-using JefimsMagicalXsltSyntaxConcoctions;
-using JefimsMagicalXsltSyntaxConcoctions.SyntaxSugars;
 using Microsoft.Win32;
 using Saxon.Api;
 using System;
@@ -66,7 +64,6 @@ namespace JefimsIncredibleXsltTool
         private const string ProgramName = "Jefim's Incredible XSLT Tool";
         public event EventHandler TransformStarting;
         public event EventHandler TransformFinished;
-        private readonly JefimsMagicalTranspiler _jefimsMagicalTranspiler = new JefimsMagicalTranspiler();
 
         public MainViewModel()
         {
@@ -101,7 +98,6 @@ namespace JefimsIncredibleXsltTool
                 if (_document != null)
                 {
                     _document.TextDocument.TextChanged += TextDocument_TextChanged;
-                    UseSyntaxSugar = _document.TextDocument.Text.StartsWith(XsltStylesheetSugar.Keyword);
                     RunTransform();
                 }
 
@@ -119,29 +115,6 @@ namespace JefimsIncredibleXsltTool
         public TextDocument XmlToTransformDocument { get; } = new TextDocument();
 
         public TextDocument ResultingXmlDocument { get; } = new TextDocument();
-
-        private bool _useSyntaxSugar;
-        public bool UseSyntaxSugar
-        {
-            get => _useSyntaxSugar;
-            set
-            {
-                if (_useSyntaxSugar == value) return;
-                _useSyntaxSugar = value;
-                OnPropertyChanged("UseSyntaxSugar");
-                Application.Current.Dispatcher.BeginInvoke(new Action(() =>
-                {
-                    try
-                    {
-                        Document.TextDocument.Text = value ? _jefimsMagicalTranspiler.PureXsltToXsltWithSugar(Document.TextDocument.Text) : _jefimsMagicalTranspiler.XsltWithSugarToPureXslt(Document.TextDocument.Text);
-                    }
-                    catch (Exception ex)
-                    {
-                        MessageBox.Show(ex.ToString());
-                    }
-                }));
-            }
-        }
 
         public TextDocument ErrorsDocument { get; } = new TextDocument();
 
@@ -260,14 +233,6 @@ namespace JefimsIncredibleXsltTool
             }
         }
 
-        internal void UpdateConcoctionsUsingFlag()
-        {
-            if (Document?.TextDocument != null)
-            {
-                UseSyntaxSugar = _document.TextDocument.Text.StartsWith(XsltStylesheetSugar.Keyword);
-            }
-        }
-
         private Func<Task<bool>> _debouncedRunTransform;
 
         public void RunTransform()
@@ -292,10 +257,6 @@ namespace JefimsIncredibleXsltTool
                 try
                 {
                     OnTransformStarting();
-                    if (UseSyntaxSugar)
-                    {
-                        xslt = _jefimsMagicalTranspiler.XsltWithSugarToPureXslt(xslt);
-                    }
 
                     string result = null;
                     switch (XsltProcessingMode)
