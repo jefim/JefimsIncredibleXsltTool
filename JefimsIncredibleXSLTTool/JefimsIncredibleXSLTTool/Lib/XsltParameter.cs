@@ -12,7 +12,7 @@
 
         public string Name
         {
-            get { return _name; }
+            get => _name;
             set
             {
                 _name = value;
@@ -21,7 +21,7 @@
         }
         public string Value
         {
-            get { return _value; }
+            get => _value;
             set
             {
                 _value = value;

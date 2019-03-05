@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.IO;
 using System.Windows;
 using System.Windows.Input;
@@ -22,45 +21,17 @@ namespace JefimsIncredibleXsltTool
     {
         private readonly MainViewModel _mainViewModel;
         private CompletionWindow _completionWindow;
-        private readonly List<int> _tmpFolderFoldingOffsets = new List<int>();
+        private readonly XmlFoldingStrategy _strategy;
+        private FoldingManager _sourceXsltFoldingManager;
+        private readonly FoldingManager _sourceXmlFoldingManager;
+        private readonly FoldingManager _outputXmlFoldingManager;
 
         public MainWindow()
         {
             _mainViewModel = new MainViewModel();
-            _mainViewModel.TransformStarting += (a, b) =>
-            {
-                var cur = -1;
-                _tmpFolderFoldingOffsets.Clear();
-                while (true)
-                {
-                    var foldedFoldingStart = _outputXmlFoldingManager.GetNextFoldedFoldingStart(cur + 1);
-                    if (foldedFoldingStart == -1) break;
-                    cur = foldedFoldingStart;
-                    var foldings = _outputXmlFoldingManager.GetFoldingsAt(foldedFoldingStart);
-                    foreach (var folding in foldings)
-                    {
-                        if (folding.IsFolded) _tmpFolderFoldingOffsets.Add(folding.StartOffset);
-
-                    }
-                }
-            };
-            _mainViewModel.TransformFinished += (a, b) =>
-            {
-                UpdateFolding();
-                if (_tmpFolderFoldingOffsets == null) return;
-                foreach (var offset in _tmpFolderFoldingOffsets)
-                {
-                    var foldingsAtOffset = _outputXmlFoldingManager.GetFoldingsAt(offset);
-                    foreach (var folding in foldingsAtOffset)
-                    {
-                        folding.IsFolded = true;
-                    }
-                }
-                _tmpFolderFoldingOffsets.Clear();
-            };
-
             DataContext = _mainViewModel;
             InitializeComponent();
+            LoadOldSettings();
             _sourceXmlFoldingManager = FoldingManager.Install(SourceXml.TextArea);
             _sourceXsltFoldingManager = FoldingManager.Install(SourceXslt.TextArea);
             _outputXmlFoldingManager = FoldingManager.Install(OutputXml.TextArea);
@@ -70,7 +41,6 @@ namespace JefimsIncredibleXsltTool
             SearchPanel.Install(SourceXslt);
 
             _strategy = new XmlFoldingStrategy();
-            UpdateFolding();
 
             SourceXslt.TextArea.TextEntering += TextEditor_TextArea_TextEntering;
             SourceXslt.TextArea.TextEntered += TextEditor_TextArea_TextEntered;
@@ -143,11 +113,6 @@ namespace JefimsIncredibleXsltTool
             }
         }
 
-        private readonly XmlFoldingStrategy _strategy;
-        private FoldingManager _sourceXsltFoldingManager;
-        private FoldingManager _sourceXmlFoldingManager;
-        private readonly FoldingManager _outputXmlFoldingManager;
-
         private void NewCommand_Executed(object sender, ExecutedRoutedEventArgs e)
         {
             FoldingManager.Uninstall(_sourceXsltFoldingManager);
@@ -200,14 +165,11 @@ namespace JefimsIncredibleXsltTool
             Properties.Settings.Default.Save();
         }
 
-        private void Load()
+        private void LoadOldSettings()
         {
             try
             {
-                FoldingManager.Uninstall(_sourceXsltFoldingManager);
-                FoldingManager.Uninstall(_sourceXmlFoldingManager);
-                if (Properties.Settings.Default.xsltPath != null &&
-                    File.Exists(Properties.Settings.Default.xsltPath))
+                if (Properties.Settings.Default.xsltPath != null && File.Exists(Properties.Settings.Default.xsltPath))
                 {
                     _mainViewModel.OpenFile(Properties.Settings.Default.xsltPath);
                 }
@@ -220,17 +182,12 @@ namespace JefimsIncredibleXsltTool
                 {
                     _mainViewModel.XmlToTransformDocument.Text = Properties.Settings.Default.xmlContent;
                 }
-                if (Properties.Settings.Default.xsdPath != null &&
-                    File.Exists(Properties.Settings.Default.xsdPath))
+                if (Properties.Settings.Default.xsdPath != null && File.Exists(Properties.Settings.Default.xsdPath))
                 {
                     _mainViewModel.ValidationSchemaFile = Properties.Settings.Default.xsdPath;
                 }
 
                 _mainViewModel.XsltProcessingMode = (XsltProcessingMode)Properties.Settings.Default.xsltProcessingMode;
-
-                _sourceXmlFoldingManager = FoldingManager.Install(SourceXml.TextArea);
-                _sourceXsltFoldingManager = FoldingManager.Install(SourceXslt.TextArea);
-                UpdateFolding();
             }
             catch (Exception ex)
             {
