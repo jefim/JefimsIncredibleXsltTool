@@ -10,6 +10,7 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Timers;
 using System.Windows;
 using System.Xml;
 using System.Xml.Linq;
@@ -20,7 +21,6 @@ using ToastNotifications;
 using ToastNotifications.Lifetime;
 using ToastNotifications.Position;
 using ToastNotifications.Messages;
-using Underscore;
 
 namespace JefimsIncredibleXsltTool
 {
@@ -53,8 +53,8 @@ namespace JefimsIncredibleXsltTool
                 offsetY: 10);
 
             cfg.LifetimeSupervisor = new TimeAndCountBasedLifetimeSupervisor(
-                notificationLifetime: TimeSpan.FromSeconds(3),
-                maximumNotificationCount: MaximumNotificationCount.FromCount(5));
+                notificationLifetime: TimeSpan.FromSeconds(2),
+                maximumNotificationCount: MaximumNotificationCount.FromCount(3));
 
             cfg.Dispatcher = Application.Current.Dispatcher;
         });
@@ -63,10 +63,10 @@ namespace JefimsIncredibleXsltTool
         private XsltProcessingMode _xsltProcessingMode = XsltProcessingMode.Saxon;
         private const string ProgramName = "Jefim's Incredible XSLT Tool";
         public event EventHandler OnTransformFinished;
-
-
+        
         public MainViewModel()
         {
+            SetupTimer();
             XsltParameters = new ObservableCollection<XsltParameter>();
             XsltParameters.CollectionChanged += (a, b) => RunTransform();
             Document = new Document();
@@ -177,29 +177,6 @@ namespace JefimsIncredibleXsltTool
             }
         }
 
-        /// <summary>
-        /// Preventively checks for possible SO exception to avoid crashes.
-        /// </summary>
-        /// <param name="xslt"></param>
-        /// <returns></returns>
-        public static string CheckForStackoverflow(string xslt)
-        {
-            var doc = new XmlDocument();
-            doc.LoadXml(xslt);
-            XmlNode root = doc.DocumentElement;
-
-            var nodes = root?.SelectNodes("//*[local-name()='apply-templates']/@select");
-            var foundRefToRoot = false;
-            foreach (var node in nodes)
-            {
-                if (((XmlAttribute)node).Value != "/") continue;
-                foundRefToRoot = true;
-                break;
-            }
-
-            return foundRefToRoot ? "Prevented a StackOverflowException - you have an apply-templates element with select=\"/\" attribute in XSLT" : null;
-        }
-
         private static IEnumerable<string> ExtractParamsFromXslt(string xslt)
         {
             try
@@ -210,6 +187,7 @@ namespace JefimsIncredibleXsltTool
 
                 var nodes = root?.SelectNodes("//*[local-name()='param']/@name");
                 var result = new List<string>();
+                if (nodes == null) return result;
                 foreach (var node in nodes)
                 {
                     result.Add(((XmlAttribute)node).Value);
@@ -224,16 +202,18 @@ namespace JefimsIncredibleXsltTool
             }
         }
 
-        private Func<Task<bool>> _debouncedRunTransform;
+        private Timer _runTransformTimer;
+
+        private void SetupTimer()
+        {
+            _runTransformTimer = new Timer(200) { Enabled = false, AutoReset = false };
+            _runTransformTimer.Elapsed += (sender, args) => Application.Current.Dispatcher.Invoke(RunTransformImpl);
+        }
 
         public void RunTransform()
         {
-            if (_debouncedRunTransform == null)
-            {
-                _debouncedRunTransform = _.Function.Debounce(RunTransformImpl, 200);
-            }
-
-            _debouncedRunTransform();
+            _runTransformTimer.Stop();
+            _runTransformTimer.Start();
         }
 
         public bool RunTransformImpl()
@@ -286,7 +266,7 @@ namespace JefimsIncredibleXsltTool
                 {
                     Application.Current.Dispatcher.BeginInvoke(new Action(() =>
                     {
-                        ErrorsDocument.Text = ex.Message;
+                        ErrorsDocument.Text = ex.InnerException?.ToString() ?? ex.Message;
                     }));
                 }
                 finally
@@ -335,9 +315,6 @@ namespace JefimsIncredibleXsltTool
 
         public static string XsltTransformDotNet(string xmlString, string xslt, XsltParameter[] xsltParameters)
         {
-            var error = CheckForStackoverflow(xslt);
-            if (error != null) return error;
-
             using (var xmlDocumenOut = new StringWriter())
             using (StringReader xmlReader = new StringReader(xmlString), xsltReader = new StringReader(xslt))
             using (XmlReader xmlDocument = XmlReader.Create(xmlReader), xsltDocument = XmlReader.Create(xsltReader))
@@ -357,14 +334,11 @@ namespace JefimsIncredibleXsltTool
 
         public static string XsltTransformSaxon(string xmlString, string xslt, XsltParameter[] xsltParameters)
         {
-            var error = CheckForStackoverflow(xslt);
-            if (error != null) return error;
-
             var processor = new Processor();
             var compiler = processor.NewXsltCompiler();
-            compiler.ErrorList = new List<object>();
+            compiler.ErrorList = new List<StaticError>();
 
-            using (var xmlDocumenOut = new StringWriter())
+            using (var xmlDocumentOut = new StringWriter())
             using (var xsltReader = new StringReader(xslt))
             using (var xmlStream = new MemoryStream(Encoding.UTF8.GetBytes(xmlString)))
             {
@@ -375,9 +349,7 @@ namespace JefimsIncredibleXsltTool
                 }
                 catch (Exception ex)
                 {
-                    var staticErrors = string.Join(Environment.NewLine, ((List<object>)compiler.ErrorList).OfType<StaticError>().Select(o => $"{o.Message} at line {o.LineNumber}, column {o.ColumnNumber}").Distinct());
-                    var dynamicErrors = string.Join(Environment.NewLine, ((List<object>)compiler.ErrorList).OfType<DynamicError>().Select(o => $"{o.Message} at line {o.LineNumber}").Distinct());
-                    var errorsStr = staticErrors + Environment.NewLine + dynamicErrors;
+                    var errorsStr = string.Join(Environment.NewLine, ((List<StaticError>)compiler.ErrorList).Select(o => $"{o.Message} at line {o.LineNumber}, column {o.ColumnNumber}").Distinct());
                     if (string.IsNullOrWhiteSpace(errorsStr))
                     {
                         throw;
@@ -389,10 +361,10 @@ namespace JefimsIncredibleXsltTool
                 transformer.SetInputStream(xmlStream, new Uri("file://"));
                 xsltParameters?.ToList().ForEach(x => transformer.SetParameter(new QName(x.Name), new XdmAtomicValue(x.Value)));
 
-                var serializer = new Serializer();
-                serializer.SetOutputWriter(xmlDocumenOut);
+                var serializer = processor.NewSerializer();
+                serializer.SetOutputWriter(xmlDocumentOut);
                 transformer.Run(serializer);
-                return xmlDocumenOut.ToString().Replace("\n", Environment.NewLine);
+                return xmlDocumentOut.ToString().Replace("\n", Environment.NewLine);
             }
         }
 

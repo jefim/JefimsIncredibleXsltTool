@@ -73,7 +73,7 @@ namespace JefimsIncredibleXsltTool
             data.Add(new XmlCompletionData("xsl:otherwise", "xsl:otherwise></xsl:otherwise>", "Provides multiple conditional testing in conjunction with the <xsl:choose> element and <xsl:when> element."));
             data.Add(new XmlCompletionData("xsl:text", "xsl:text></xsl:text>", "Generates text in the output."));
             data.Add(new XmlCompletionData("xsl:value-of", "xsl:value-of select=\"temp\" />", "Inserts the value of the selected node as text."));
-            data.Add(new XmlCompletionData("xsl:variable", "xsl:variable select=\"temp\"></xsl:variable>", "Specifies a value bound in an expression."));
+            data.Add(new XmlCompletionData("xsl:variable", "xsl:variable name=\"temp\" select=\"temp\"></xsl:variable>", "Specifies a value bound in an expression."));
             data.Add(new XmlCompletionData("xsl:when", "xsl:when test=\"temp\"></xsl:when>", "Provides multiple conditional testing in conjunction with the <xsl:choose> element and <xsl:otherwise> element."));
 
             int? offset = 0;
