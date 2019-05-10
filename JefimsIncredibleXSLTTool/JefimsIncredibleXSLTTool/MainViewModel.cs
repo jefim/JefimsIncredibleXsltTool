@@ -99,6 +99,7 @@ namespace JefimsIncredibleXsltTool
                     _document.TextDocument.TextChanged += TextDocument_TextChanged;
                 }
 
+                OnPropertyChanged("Document");
                 OnPropertyChanged("WindowTitle");
             }
         }
