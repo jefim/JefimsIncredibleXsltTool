@@ -46,6 +46,7 @@ namespace JefimsIncredibleXsltTool
     {
         public Notifier Notifier = new Notifier(cfg =>
         {
+            cfg.DisplayOptions.TopMost = false;
             cfg.PositionProvider = new WindowPositionProvider(
                 parentWindow: Application.Current.MainWindow,
                 corner: Corner.TopRight,
