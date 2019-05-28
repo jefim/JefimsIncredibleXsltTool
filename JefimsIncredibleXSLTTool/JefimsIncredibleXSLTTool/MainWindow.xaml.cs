@@ -74,7 +74,7 @@ namespace JefimsIncredibleXsltTool
             data.Add(new XmlCompletionData("xsl:stylesheet", "xsl:stylesheet version=\"2.0\"\r\n  xmlns:xsl=\"http://www.w3.org/1999/XSL/Transform\"\r\n  xmlns:xs=\"http://www.w3.org/2001/XMLSchema\"\r\n  xmlns:fn=\"http://www.w3.org/2005/xpath-functions\"\r\n  exclude-result-prefixes=\"xs fn\">\r\n  <xsl:output version=\"1.0\" method=\"xml\" omit-xml-declaration=\"yes\" indent=\"yes\" />\r\n\r\n  <xsl:template match=\"/\">\r\n    <xsl:text>temp</xsl:text>\r\n  </xsl:template>\r\n</xsl:stylesheet>", "Template stylesheet."));
             data.Add(new XmlCompletionData("xsl:text", "xsl:text></xsl:text>", "Generates text in the output."));
             data.Add(new XmlCompletionData("xsl:value-of", "xsl:value-of select=\"temp\" />", "Inserts the value of the selected node as text."));
-            data.Add(new XmlCompletionData("xsl:variable", "xsl:variable name=\"temp\" select=\"temp\"></xsl:variable>", "Specifies a value bound in an expression."));
+            data.Add(new XmlCompletionData("xsl:variable", "xsl:variable name=\"temp\" select=\"temp\" />", "Specifies a value bound in an expression."));
             data.Add(new XmlCompletionData("xsl:when", "xsl:when test=\"temp\"></xsl:when>", "Provides multiple conditional testing in conjunction with the <xsl:choose> element and <xsl:otherwise> element."));
 
             int? offset = 0;
