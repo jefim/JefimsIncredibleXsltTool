@@ -1,6 +1,6 @@
 1.11
 - Removed the syntax concoctions
-- 
+- Big thanks to Tomi Ronimus for a huge refactorin job!
 
 1.10
 - Added JUST engine for JSON transformations (https://github.com/WorkMaze/JUST.net)
