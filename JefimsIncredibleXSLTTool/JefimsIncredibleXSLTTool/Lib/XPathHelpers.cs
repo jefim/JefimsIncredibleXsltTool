@@ -14,15 +14,34 @@ namespace JefimsIncredibleXsltTool.Lib
             {
                 var xdoc = XDocument.Load(reader, LoadOptions.SetLineInfo | LoadOptions.PreserveWhitespace);
                 XElement bestCandidate = null;
-                foreach (var ancestor in xdoc.Descendants())
+                foreach (var candidate in xdoc.Descendants())
                 {
-                    var lineInfo = ((IXmlLineInfo)ancestor);
-                    var lineInfoLinePositionFixed = lineInfo.LinePosition - 2;
-                    if (lineInfo.LineNumber > line) continue;
-                    if (lineInfo.LineNumber == line && lineInfoLinePositionFixed > column) continue;
-                    if (bestCandidate == null) bestCandidate = ancestor;
+                    var candidateLineInfo = (IXmlLineInfo)candidate;
+                    var candidateLineInfoPositionFixed = candidateLineInfo.LinePosition;
+                    
+                    // If candidate is past our line - ingore it
+                    if (candidateLineInfo.LineNumber > line) continue;
+
+                    // If candidate is on out line, but is past our column - ignore it
+                    if (candidateLineInfo.LineNumber == line && candidateLineInfoPositionFixed > column) continue;
+
+                    // If up to here we still have not found any good candidate - assign the current candidate as best
+                    // (basically this way we assign the first candidate)
+                    if (bestCandidate == null) bestCandidate = candidate;
+
+
                     var bestCandidateLineInfo = (IXmlLineInfo)bestCandidate;
-                    if (line - bestCandidateLineInfo.LineNumber > line - lineInfo.LineNumber) bestCandidate = ancestor;
+
+                    // If current best candidate
+                    var bestCandidateLineDiff = line - bestCandidateLineInfo.LineNumber;
+                    var currentCandidateLineDiff = line - candidateLineInfo.LineNumber;
+
+                    // If current candidate is closer (by line amount) to line - replace best candidate with current
+                    if (bestCandidateLineDiff > currentCandidateLineDiff) bestCandidate = candidate;
+
+                    // If current candidate is closer (by column amount) to current column - replace best candidate with current
+                    if ((bestCandidateLineDiff == currentCandidateLineDiff) && 
+                        (column - bestCandidateLineInfo.LinePosition) > (column - candidateLineInfoPositionFixed)) bestCandidate = candidate;
                 }
                 return bestCandidate;
             }

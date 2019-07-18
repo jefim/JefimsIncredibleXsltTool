@@ -1,3 +1,7 @@
+1.11
+- Removed the syntax concoctions
+- 
+
 1.10
 - Added JUST engine for JSON transformations (https://github.com/WorkMaze/JUST.net)
   The engine works and prety print buttons work, all other functionality is not tested
