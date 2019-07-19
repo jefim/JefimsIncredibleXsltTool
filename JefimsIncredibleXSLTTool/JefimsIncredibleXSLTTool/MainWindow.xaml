@@ -1,15 +1,11 @@
-﻿<Window x:Class="WpfApplication2.MainWindow"
+﻿<Window x:Class="JefimsIncredibleXsltTool.MainWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-        xmlns:local="clr-namespace:WpfApplication2"
-        xmlns:avalon="clr-namespace:ICSharpCode.AvalonEdit"
-        xmlns:toast="clr-namespace:ToastNotifications;assembly=ToastNotifications"
         mc:Ignorable="d"
         Title="{Binding WindowTitle}" Height="600" Width="700"
-        Closing="Window_Closing"
-        Loaded="Window_Loaded">
+        Closing="Window_Closing">
     <Window.Resources>
         <BooleanToVisibilityConverter x:Key="BoolToVis" />
     </Window.Resources>
@@ -32,18 +28,15 @@
                 <MenuItem Command="Open" />
                 <MenuItem Command="Save" />
                 <MenuItem Header="Licenses" Click="MenuItemLicenses_Click" />
+                <MenuItem Header="Contributors" Click="MenuItemContributors_Click" />
             </MenuItem>
         </Menu>
-
-        <toast:NotificationTray NotificationsSource="{Binding NotificationSource}"
-                        PopupFlowDirection="RightUp"
-                        VerticalAlignment="Top"
-                        HorizontalAlignment="Right" />
 
         <Grid Grid.Row="1">
             <Expander Header="Parameters here. Should be autodetected. How awesome is that?!?!!" Margin="10">
                 <DataGrid ItemsSource="{Binding XsltParameters}" MinHeight="100" AutoGenerateColumns="True" CanUserAddRows="True"  CanUserDeleteRows="True" />
             </Expander>
+            <TextBlock Grid.Column="0" HorizontalAlignment="Right" Margin="0,13,5,0">Made with <Run Foreground="Red">❤</Run> by <Hyperlink Click="MenuItemContributors_Click">these cool people</Hyperlink></TextBlock>
         </Grid>
 
         <Grid Grid.Row="2">
@@ -59,20 +52,26 @@
 
             <StackPanel HorizontalAlignment="Center">
                 <TextBlock FontSize="24" HorizontalAlignment="Center">XSLT</TextBlock>
-                <Button HorizontalAlignment="Center" Padding="10,1" Click="ButtonCopyEscapedXslt_Click" Width="170">Copy escaped text ( @"..." )</Button>
-                <Button HorizontalAlignment="Center" Padding="10,1" Click="ButtonPasteEscapedXslt_Click" Width="170" Margin="0,1,0,0">Paste escaped text ( @"..." )</Button>
-            </StackPanel>
-
-            <StackPanel Grid.Column="1" HorizontalAlignment="Center">
-                <TextBlock FontSize="24" TextWrapping="Wrap" HorizontalAlignment="Center">XML</TextBlock>
-                <TextBlock HorizontalAlignment="Center">to transform (copy-paste only)</TextBlock>
-                <TextBlock Width="170" TextWrapping="Wrap" TextAlignment="Center">Use <Run FontWeight="Bold">Ctrl + F</Run> for searching in all three panels</TextBlock>
-            </StackPanel>
-            <StackPanel Grid.Column="2" HorizontalAlignment="Center">
-                <TextBlock TextWrapping="Wrap" FontSize="24">Output</TextBlock>
                 <Grid>
                     <Grid.RowDefinitions>
                         <RowDefinition Height="22"/>
+                    </Grid.RowDefinitions>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition />
+                    </Grid.ColumnDefinitions>
+                    <TextBlock Grid.Row="0" Grid.Column="0" Text="Transform engine:" VerticalAlignment="Center" Margin="0,0,5,0"/>
+                    <ComboBox Grid.Column="1" VerticalAlignment="Center" Grid.Row="0" ItemsSource="{Binding XsltProcessingModes}" SelectedItem="{Binding XsltProcessingMode}" MinWidth="50" />
+                </Grid>
+            </StackPanel>
+
+            <StackPanel Grid.Row="0" Grid.Column="1" HorizontalAlignment="Center">
+                <TextBlock FontSize="24" TextWrapping="Wrap" HorizontalAlignment="Center">XML</TextBlock>
+            </StackPanel>
+            <StackPanel Grid.Row="0" Grid.Column="2" HorizontalAlignment="Center">
+                <TextBlock TextWrapping="Wrap" FontSize="24">Output</TextBlock>
+                <Grid>
+                    <Grid.RowDefinitions>
                         <RowDefinition Height="22"/>
                     </Grid.RowDefinitions>
                     <Grid.ColumnDefinitions>
@@ -80,9 +79,7 @@
                         <ColumnDefinition />
                     </Grid.ColumnDefinitions>
                     <TextBlock Text="Schema path:" VerticalAlignment="Center" />
-                    <TextBox Grid.Column="1" Text="{Binding ValidationSchemaFile}" MinWidth="70" VerticalAlignment="Center" />
-                    <TextBlock Grid.Row="1" Text="Transform engine:" VerticalAlignment="Center" Margin="0,0,5,0"/>
-                    <ComboBox Grid.Column="1" VerticalAlignment="Center" Grid.Row="1" ItemsSource="{Binding XsltProcessingModes}" SelectedItem="{Binding XsltProcessingMode}" MinWidth="50" />
+                    <TextBox Grid.Row="0" Grid.Column="1" Text="{Binding ValidationSchemaFile}" MinWidth="70" VerticalAlignment="Center" />
                 </Grid>
             </StackPanel>
 
@@ -139,7 +136,7 @@
                     </avalonEdit:TextEditor.ContextMenu>
                 </avalonEdit:TextEditor>
                 <StackPanel Grid.Row="1">
-                    <TextBlock x:Name="textBlockXPath" TextWrapping="Wrap" />
+                    <TextBlock x:Name="TextBlockXPath" TextWrapping="Wrap" />
                     <Button Click="ButtonCopyXPath_Click" Margin="0,2,5,0">Copy XPath</Button>
                     <Button Click="ButtonCopyXPathNoIndexes_Click" Margin="0,2,5,0">Copy XPath, no indexes</Button>
                     <Button Click="ButtonPrettyPrint_Click" Margin="0,2,5,0">Pretty print</Button>
@@ -170,22 +167,13 @@
                 SyntaxHighlighting="XML"
                 ShowLineNumbers="True"
                 FontSize="10pt"
-                Background="#EEEEEE"
-                    MinHeight="150"
+                Background="#DBDBDB"
+                Height="150"
                 Grid.Row="1"
                 Document="{Binding ErrorsDocument}"
                 Visibility="{Binding ErrorsExist, Converter={StaticResource BoolToVis}}"
                 IsReadOnly="True"/>
             </Grid>
-        </Grid>
-        <Grid Grid.Row="3">
-            <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="*" />
-                <ColumnDefinition Width="Auto" />
-            </Grid.ColumnDefinitions>
-
-            <CheckBox IsChecked="{Binding UseSyntaxSugar}">Use syntax concoctions (there is a README-SYNTAX.TXT ;)!</CheckBox>
-            <TextBlock Grid.Column="1" HorizontalAlignment="Right">Made with some <Run Foreground="Red">❤</Run> by Jefim</TextBlock>
         </Grid>
     </Grid>
 </Window>

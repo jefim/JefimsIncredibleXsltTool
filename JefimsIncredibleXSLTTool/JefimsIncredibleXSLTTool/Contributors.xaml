@@ -1,0 +1,18 @@
+﻿<Window x:Class="JefimsIncredibleXsltTool.Contributors"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:JefimsIncredibleXsltTool"
+        mc:Ignorable="d"
+        Title="Contributors" Height="250" Width="300">
+    <Grid>
+        <StackPanel Margin="5">
+            <TextBlock FontSize="24">Contributors</TextBlock>
+            <TextBlock Margin="0,10,0,10" TextWrapping="Wrap">This software is maintained by the community and everyone's efforts are highly appreciated. Here is a list of people whose efforts made this tool possible:</TextBlock>
+            <TextBlock Margin="10,0,0,0" TextWrapping="Wrap">- Jefim Borissov <Hyperlink NavigateUri="https://github.com/jefim">GitHub</Hyperlink></TextBlock>
+            <TextBlock Margin="10,0,0,0" TextWrapping="Wrap">- Tomi Ronimus <Hyperlink NavigateUri="https://github.com/narnil">GitHub</Hyperlink></TextBlock>
+            <TextBlock Margin="0,10,0,10" TextWrapping="Wrap">Want to contribute? Go to <Hyperlink NavigateUri="https://github.com/CommunityHiQ/JefimsIncredibleXsltTool">our GitHub repository</Hyperlink> and start hacking away!</TextBlock>
+        </StackPanel>
+    </Grid>
+</Window>

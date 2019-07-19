@@ -12,19 +12,19 @@
 
         public string Name
         {
-            get { return _name; }
+            get => _name;
             set
             {
-                this._name = value;
+                _name = value;
                 OnPropertyChanged("Name");
             }
         }
         public string Value
         {
-            get { return _value; }
+            get => _value;
             set
             {
-                this._value = value;
+                _value = value;
                 OnPropertyChanged("Value");
             }
         }
