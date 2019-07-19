@@ -28,6 +28,7 @@
                 <MenuItem Command="Open" />
                 <MenuItem Command="Save" />
                 <MenuItem Header="Licenses" Click="MenuItemLicenses_Click" />
+                <MenuItem Header="Contributors" Click="MenuItemContributors_Click" />
             </MenuItem>
         </Menu>
 
@@ -35,7 +36,7 @@
             <Expander Header="Parameters here. Should be autodetected. How awesome is that?!?!!" Margin="10">
                 <DataGrid ItemsSource="{Binding XsltParameters}" MinHeight="100" AutoGenerateColumns="True" CanUserAddRows="True"  CanUserDeleteRows="True" />
             </Expander>
-            <TextBlock Grid.Column="0" HorizontalAlignment="Right" Margin="0,13,5,0">Made with some <Run Foreground="Red">❤</Run> by Jefim</TextBlock>
+            <TextBlock Grid.Column="0" HorizontalAlignment="Right" Margin="0,13,5,0">Made with <Run Foreground="Red">❤</Run> by <Hyperlink Click="MenuItemContributors_Click">these cool people</Hyperlink></TextBlock>
         </Grid>
 
         <Grid Grid.Row="2">

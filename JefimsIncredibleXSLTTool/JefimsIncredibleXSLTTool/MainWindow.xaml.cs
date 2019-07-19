@@ -325,5 +325,10 @@ namespace JefimsIncredibleXsltTool
         {
             new Licenses().ShowDialog();
         }
+
+        private void MenuItemContributors_Click(object sender, RoutedEventArgs e)
+        {
+            new Contributors().ShowDialog();
+        }
     }
 }
