@@ -52,6 +52,7 @@
     <Reference Include="Newtonsoft.Json.Schema, Version=3.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
       <HintPath>..\packages\Newtonsoft.Json.Schema.3.0.11\lib\net45\Newtonsoft.Json.Schema.dll</HintPath>
     </Reference>
+    <Reference Include="PresentationFramework.Aero" />
     <Reference Include="saxon9he-api, Version=9.9.1.2, Culture=neutral, PublicKeyToken=e1fdd002d5083fe6, processorArchitecture=MSIL">
       <HintPath>..\packages\Saxon-HE.9.9.1.2\lib\net40\saxon9he-api.dll</HintPath>
     </Reference>
@@ -100,6 +101,7 @@
     <Compile Include="Contributors.xaml.cs">
       <DependentUpon>Contributors.xaml</DependentUpon>
     </Compile>
+    <Compile Include="Lib\ColorTheme.cs" />
     <Compile Include="Lib\XmlCompletionData.cs" />
     <Compile Include="Lib\XPathHelpers.cs" />
     <Compile Include="Lib\XsltParameter.cs" />
@@ -111,6 +113,10 @@
     <Compile Include="Licenses.xaml.cs">
       <DependentUpon>Licenses.xaml</DependentUpon>
     </Compile>
+    <Page Include="Resources\SimpleStyles.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Properties\AssemblyInfo.cs">
@@ -145,6 +151,17 @@
   </ItemGroup>
   <ItemGroup>
     <Resource Include="Resources\jixt-icon.ico" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Resources\cursor.cur">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Resource>
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="Resources\AvalonXmlDarkTheme.xml" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="Resources\AvalonXmlLightTheme.xml" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

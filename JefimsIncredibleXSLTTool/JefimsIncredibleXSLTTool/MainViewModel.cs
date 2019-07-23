@@ -64,7 +64,15 @@ namespace JefimsIncredibleXsltTool
         private XsltProcessingMode _xsltProcessingMode = XsltProcessingMode.Saxon;
         private const string ProgramName = "Jefim's Incredible XSLT Tool";
         public event EventHandler OnTransformFinished;
-        
+        public ColorTheme ColorTheme
+        {
+            get => _colorTheme;
+            set
+            {
+                _colorTheme = value;
+                OnPropertyChanged("ColorTheme");
+            }
+        }
         public MainViewModel()
         {
             SetupTimer();
@@ -304,6 +312,7 @@ namespace JefimsIncredibleXsltTool
         }
 
         private string _validationSchemaFile;
+        private ColorTheme _colorTheme = new ColorTheme();
 
         public string ValidationSchemaFile
         {

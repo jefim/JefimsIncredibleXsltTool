@@ -3,11 +3,97 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:avalonEdit="http://icsharpcode.net/sharpdevelop/avalonedit"
+        xmlns:avalonEditFolding="clr-namespace:ICSharpCode.AvalonEdit.Folding;assembly=ICSharpCode.AvalonEdit"
+        xmlns:themes="clr-namespace:Microsoft.Windows.Themes;assembly=PresentationFramework.Aero"
         mc:Ignorable="d"
-        Title="{Binding WindowTitle}" Height="600" Width="700"
-        Closing="Window_Closing">
+        Title="{Binding WindowTitle}" Height="600" Width="1000"
+        Closing="Window_Closing"
+        Foreground="{Binding ColorTheme.Foreground}"
+        Background="{Binding ColorTheme.Background}"
+        Loaded="Window_Loaded">
     <Window.Resources>
-        <BooleanToVisibilityConverter x:Key="BoolToVis" />
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceDictionary Source="Resources/SimpleStyles.xaml"/>
+            </ResourceDictionary.MergedDictionaries>
+            <BooleanToVisibilityConverter x:Key="BoolToVis" />
+            <Style TargetType="avalonEditFolding:FoldingMargin">
+                <Setter Property="FoldingMarkerBrush" Value="{Binding ColorTheme.FoldingLines}" />
+                <Setter Property="FoldingMarkerBackgroundBrush" Value="{Binding ColorTheme.FoldingBackground}" />
+                <Setter Property="SelectedFoldingMarkerBrush" Value="{Binding ColorTheme.SelectedFoldingLines}" />
+                <Setter Property="SelectedFoldingMarkerBackgroundBrush" Value="{Binding ColorTheme.SelectedFoldingBackground}" />
+                <Setter Property="Cursor" Value="Arrow" />
+            </Style>
+
+            <Style TargetType="ScrollBar" BasedOn="{StaticResource SimpleScrollBar}">
+                <Setter Property="SnapsToDevicePixels" Value="True" />
+                <Setter Property="Background" Value="{Binding ColorTheme.ScrollBarBackground}" />
+                <Setter Property="Foreground" Value="{Binding ColorTheme.ScrollBarForeground}" />
+            </Style>
+            <Style TargetType="ScrollViewer" BasedOn="{StaticResource SimpleScrollViewer}">
+                <Setter Property="Background" Value="{Binding ColorTheme.ScrollBarBackground}" />
+                <Setter Property="Foreground" Value="{Binding ColorTheme.ScrollBarForeground}" />
+            </Style>
+            <Style TargetType="GridSplitter">
+                <Setter Property="Background" Value="{Binding DataContext.ColorTheme.Background, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=Window}}" />
+            </Style>
+            <Style TargetType="Button" BasedOn="{StaticResource SimpleButton}">
+                <Setter Property="Foreground" Value="{Binding ColorTheme.ButtonForeground}" />
+                <Setter Property="BorderBrush" Value="{Binding ColorTheme.ButtonForeground}" />
+                <Setter Property="Background" Value="{Binding ColorTheme.ButtonBackground}" />
+                <Setter Property="Padding" Value="10,4" />
+            </Style>
+            <Style TargetType="TextBox" BasedOn="{StaticResource {x:Type TextBox}}">
+                <Setter Property="Foreground" Value="{Binding ColorTheme.Foreground}" />
+                <Setter Property="Background" Value="{Binding ColorTheme.EditorBackground}" />
+                <Setter Property="CaretBrush" Value="{Binding ColorTheme.Foreground}" />
+                <Setter Property="Cursor" Value="Resources/cursor.cur" />
+            </Style>
+            <Style TargetType="Menu" BasedOn="{StaticResource SimpleMenu}">
+                <Setter Property="Foreground" Value="{Binding ColorTheme.MenuForeground}" />
+                <Setter Property="Background" Value="{Binding ColorTheme.MenuBackground}" />
+            </Style>
+            <Style TargetType="Expander" BasedOn="{StaticResource {x:Type Expander}}">
+                <Setter Property="Foreground" Value="{Binding ColorTheme.Foreground}" />
+                <Setter Property="Background" Value="{Binding ColorTheme.Background}" />
+            </Style>
+            <Style TargetType="DataGrid" BasedOn="{StaticResource {x:Type DataGrid}}">
+                <Setter Property="Foreground" Value="{Binding ColorTheme.Foreground}" />
+                <Setter Property="Background" Value="{Binding ColorTheme.Background}" />
+                <Setter Property="RowBackground" Value="{Binding ColorTheme.Background}" />
+            </Style>
+            <Style TargetType="MenuItem" BasedOn="{StaticResource SimpleMenuItem}">
+                <Setter Property="Foreground" Value="{Binding ColorTheme.MenuForeground}" />
+                <Setter Property="Background" Value="{Binding ColorTheme.MenuBackground}" />
+                <Setter Property="BorderBrush" Value="{Binding ColorTheme.MenuBackground}" />
+            </Style>
+            <Style TargetType="ComboBox" BasedOn="{StaticResource SimpleComboBox}">
+                <Setter Property="Foreground" Value="{Binding ColorTheme.ButtonForeground}" />
+                <Setter Property="Background" Value="{Binding ColorTheme.ButtonBackground}" />
+            </Style>
+            <Style TargetType="avalonEdit:TextArea" BasedOn="{StaticResource {x:Type avalonEdit:TextArea}}">
+                <Setter Property="Cursor" Value="Resources/cursor.cur" />
+                <Setter Property="Background" Value="{Binding ColorTheme.EditorBackground}" />
+                <Setter Property="Foreground" Value="{Binding ColorTheme.EditorForeground}" />
+            </Style>
+            <Style TargetType="avalonEdit:TextEditor" BasedOn="{StaticResource {x:Type avalonEdit:TextEditor}}">
+                <Setter Property="Background" Value="{Binding ColorTheme.EditorBackground}" />
+                <Setter Property="Foreground" Value="{Binding ColorTheme.EditorForeground}" />
+                <Setter Property="Cursor" Value="Resources/cursor.cur" />
+                <Style.Triggers>
+                    <Trigger Property="IsReadOnly" Value="True">
+                        <Setter Property="Background" Value="{Binding ColorTheme.EditorReadOnlyBackground}" />
+                    </Trigger>
+                </Style.Triggers>
+            </Style>
+
+            <!-- Data Grid has its own data context, so we cannot just refer to window's data context as usual, so we traverse the tree using FindAncestor -->
+            <Style BasedOn="{StaticResource {x:Type DataGridColumnHeader}}" TargetType="DataGridColumnHeader">
+                <Setter Property="Background" Value="{Binding DataContext.ColorTheme.MenuBackground, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=Window}}" />
+                <Setter Property="Foreground" Value="{Binding DataContext.ColorTheme.MenuForeground, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=Window}}" />
+            </Style>
+        </ResourceDictionary>
     </Window.Resources>
     <Window.CommandBindings>
         <CommandBinding Command="New" Executed="NewCommand_Executed" />
@@ -30,16 +116,20 @@
                 <MenuItem Header="Licenses" Click="MenuItemLicenses_Click" />
                 <MenuItem Header="Contributors" Click="MenuItemContributors_Click" />
             </MenuItem>
+            <MenuItem Header="_Colors">
+                <MenuItem Header="☼ Light" Click="MenuItemLightTheme_Click" />
+                <MenuItem Header="☽ Dark" Click="MenuItemDarkTheme_Click" />
+            </MenuItem>
         </Menu>
 
         <Grid Grid.Row="1">
             <Expander Header="Parameters here. Should be autodetected. How awesome is that?!?!!" Margin="10">
-                <DataGrid ItemsSource="{Binding XsltParameters}" MinHeight="100" AutoGenerateColumns="True" CanUserAddRows="True"  CanUserDeleteRows="True" />
+                <DataGrid ItemsSource="{Binding XsltParameters}" MinHeight="100" AutoGenerateColumns="True" CanUserAddRows="True"  CanUserDeleteRows="True" RowHeaderWidth="0"></DataGrid>
             </Expander>
             <TextBlock Grid.Column="0" HorizontalAlignment="Right" Margin="0,13,5,0">Made with <Run Foreground="Red">❤</Run> by <Hyperlink Click="MenuItemContributors_Click">these cool people</Hyperlink></TextBlock>
         </Grid>
 
-        <Grid Grid.Row="2">
+        <Grid Grid.Row="2" Margin="7">
             <Grid.RowDefinitions>
                 <RowDefinition Height="auto"></RowDefinition>
                 <RowDefinition/>
@@ -61,7 +151,7 @@
                         <ColumnDefinition />
                     </Grid.ColumnDefinitions>
                     <TextBlock Grid.Row="0" Grid.Column="0" Text="Transform engine:" VerticalAlignment="Center" Margin="0,0,5,0"/>
-                    <ComboBox Grid.Column="1" VerticalAlignment="Center" Grid.Row="0" ItemsSource="{Binding XsltProcessingModes}" SelectedItem="{Binding XsltProcessingMode}" MinWidth="50" />
+                    <ComboBox Grid.Column="1" VerticalAlignment="Center" Grid.Row="0" ItemsSource="{Binding XsltProcessingModes}" SelectedItem="{Binding XsltProcessingMode}" MinWidth="70" />
                 </Grid>
             </StackPanel>
 
@@ -79,7 +169,7 @@
                         <ColumnDefinition />
                     </Grid.ColumnDefinitions>
                     <TextBlock Text="Schema path:" VerticalAlignment="Center" />
-                    <TextBox Grid.Row="0" Grid.Column="1" Text="{Binding ValidationSchemaFile}" MinWidth="70" VerticalAlignment="Center" />
+                    <TextBox Grid.Row="0" Grid.Column="1" Text="{Binding ValidationSchemaFile}" MinWidth="70" VerticalAlignment="Center" Margin="5,0,0,0" />
                 </Grid>
             </StackPanel>
 
@@ -91,7 +181,6 @@
                     <RowDefinition Height="auto"/>
                 </Grid.RowDefinitions>
                 <avalonEdit:TextEditor
-                            xmlns:avalonEdit="http://icsharpcode.net/sharpdevelop/avalonedit"
                             Name="SourceXslt"
                             FontFamily="Consolas"
                             SyntaxHighlighting="XML"
@@ -104,9 +193,9 @@
                         </ContextMenu>
                     </avalonEdit:TextEditor.ContextMenu>
                 </avalonEdit:TextEditor>
-                <StackPanel Grid.Row="1">
+                <WrapPanel Grid.Row="1">
                     <Button Click="ButtonPrettyPrintXslt_Click">Pretty print</Button>
-                </StackPanel>
+                </WrapPanel>
             </Grid>
             <GridSplitter Grid.Column="0" Width="5"
                 Grid.Row="1" />
@@ -118,7 +207,6 @@
                 </Grid.RowDefinitions>
                 <avalonEdit:TextEditor
                     Margin="0,0,5,0"
-                    xmlns:avalonEdit="http://icsharpcode.net/sharpdevelop/avalonedit"
                     Name="SourceXml"
                     FontFamily="Consolas"
                     SyntaxHighlighting="XML"
@@ -137,9 +225,11 @@
                 </avalonEdit:TextEditor>
                 <StackPanel Grid.Row="1">
                     <TextBlock x:Name="TextBlockXPath" TextWrapping="Wrap" />
-                    <Button Click="ButtonCopyXPath_Click" Margin="0,2,5,0">Copy XPath</Button>
-                    <Button Click="ButtonCopyXPathNoIndexes_Click" Margin="0,2,5,0">Copy XPath, no indexes</Button>
-                    <Button Click="ButtonPrettyPrint_Click" Margin="0,2,5,0">Pretty print</Button>
+                    <WrapPanel>
+                        <Button Click="ButtonCopyXPath_Click" Margin="0,2,5,0">Copy XPath</Button>
+                        <Button Click="ButtonCopyXPathNoIndexes_Click" Margin="0,2,5,0">Copy XPath, no indexes</Button>
+                        <Button Click="ButtonPrettyPrint_Click" Margin="0,2,5,0">Pretty print</Button>
+                    </WrapPanel>
                 </StackPanel>
             </Grid>
             <GridSplitter Grid.Column="1" Width="5"
@@ -150,29 +240,25 @@
                     <RowDefinition Height="auto" />
                 </Grid.RowDefinitions>
                 <avalonEdit:TextEditor
-                xmlns:avalonEdit="http://icsharpcode.net/sharpdevelop/avalonedit"
-                Name="OutputXml"
-                FontFamily="Consolas"
-                SyntaxHighlighting="XML"
-                ShowLineNumbers="True"
-                FontSize="10pt"
-                Background="#EEEEEE"
-                Document="{Binding ResultingXmlDocument}"
-                IsReadOnly="True"/>
+                    Name="OutputXml"
+                    FontFamily="Consolas"
+                    SyntaxHighlighting="XML"
+                    ShowLineNumbers="True"
+                    FontSize="10pt"
+                    Document="{Binding ResultingXmlDocument}"
+                    IsReadOnly="True"/>
                 <avalonEdit:TextEditor
-                xmlns:avalonEdit="http://icsharpcode.net/sharpdevelop/avalonedit"
-                Name="Errors"
+                    Name="Errors"
                     WordWrap="True"
-                FontFamily="Consolas"
-                SyntaxHighlighting="XML"
-                ShowLineNumbers="True"
-                FontSize="10pt"
-                Background="#DBDBDB"
-                Height="150"
-                Grid.Row="1"
-                Document="{Binding ErrorsDocument}"
-                Visibility="{Binding ErrorsExist, Converter={StaticResource BoolToVis}}"
-                IsReadOnly="True"/>
+                    FontFamily="Consolas"
+                    SyntaxHighlighting="XML"
+                    ShowLineNumbers="True"
+                    FontSize="10pt"
+                    Height="150"
+                    Grid.Row="1"
+                    Document="{Binding ErrorsDocument}"
+                    Visibility="{Binding ErrorsExist, Converter={StaticResource BoolToVis}}"
+                    IsReadOnly="True"/>
             </Grid>
         </Grid>
     </Grid>

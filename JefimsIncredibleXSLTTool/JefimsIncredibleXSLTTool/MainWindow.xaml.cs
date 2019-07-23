@@ -2,10 +2,13 @@
 using System.IO;
 using System.Windows;
 using System.Windows.Input;
+using System.Xml;
 using System.Xml.Linq;
 using ICSharpCode.AvalonEdit;
 using ICSharpCode.AvalonEdit.CodeCompletion;
 using ICSharpCode.AvalonEdit.Folding;
+using ICSharpCode.AvalonEdit.Highlighting;
+using ICSharpCode.AvalonEdit.Highlighting.Xshd;
 using ICSharpCode.AvalonEdit.Search;
 using JefimsIncredibleXsltTool.Lib;
 using Microsoft.Win32;
@@ -91,6 +94,31 @@ namespace JefimsIncredibleXsltTool
                 if (offset != null)
                     SourceXslt.CaretOffset = SourceXslt.CaretOffset - (int)offset;
             };
+        }
+
+        private void HightlightSyntax(string embeddedResourceName)
+        {
+            using (Stream s = GetType().Assembly.GetManifestResourceStream(embeddedResourceName))
+            {
+                using (XmlTextReader reader = new XmlTextReader(s))
+                {
+                    var highlightingDef = HighlightingLoader.Load(reader, HighlightingManager.Instance);
+                    SourceXslt.SyntaxHighlighting = highlightingDef;
+                    SourceXml.SyntaxHighlighting = highlightingDef;
+                    OutputXml.SyntaxHighlighting = highlightingDef;
+                    Errors.SyntaxHighlighting = highlightingDef;
+                }
+            }
+        }
+
+        private void HighlightSyntaxDark()
+        {
+            HightlightSyntax("JefimsIncredibleXsltTool.Resources.AvalonXmlDarkTheme.xml");
+        }
+
+        private void HighlightSyntaxLight()
+        {
+            HightlightSyntax("JefimsIncredibleXsltTool.Resources.AvalonXmlLightTheme.xml");
         }
 
         private void TextEditor_TextArea_TextEntering(object sender, TextCompositionEventArgs e)
@@ -329,6 +357,24 @@ namespace JefimsIncredibleXsltTool
         private void MenuItemContributors_Click(object sender, RoutedEventArgs e)
         {
             new Contributors().ShowDialog();
+        }
+
+        private void Window_Loaded(object sender, RoutedEventArgs e)
+        {
+            HighlightSyntaxDark();
+        }
+
+        private void MenuItemDarkTheme_Click(object sender, RoutedEventArgs e)
+        {
+            this._mainViewModel.ColorTheme = ColorTheme.DarkColorTheme;
+            this.HighlightSyntaxDark();
+        }
+
+        private void MenuItemLightTheme_Click(object sender, RoutedEventArgs e)
+        {
+            this._mainViewModel.ColorTheme = ColorTheme.LightColorTheme;
+            this.HighlightSyntaxLight();
+
         }
     }
 }
