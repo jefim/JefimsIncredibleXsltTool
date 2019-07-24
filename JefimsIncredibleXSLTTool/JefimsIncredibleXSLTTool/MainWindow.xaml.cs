@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Linq;
 using System.IO;
 using System.Windows;
 using System.Windows.Input;
@@ -14,6 +15,7 @@ using JefimsIncredibleXsltTool.Lib;
 using Microsoft.Win32;
 using Newtonsoft.Json.Linq;
 using ToastNotifications.Messages;
+using System.Windows.Controls;
 
 namespace JefimsIncredibleXsltTool
 {
@@ -96,6 +98,25 @@ namespace JefimsIncredibleXsltTool
             };
         }
 
+        private void ChangeColorTheme(ColorTheme colorTheme)
+        {
+            _mainViewModel.ColorTheme = colorTheme;
+            using (Stream s = GetType().Assembly.GetManifestResourceStream(colorTheme.AvalonXmlHighlightResourceName))
+            {
+                using (XmlTextReader reader = new XmlTextReader(s))
+                {
+                    var highlightingDef = HighlightingLoader.Load(reader, HighlightingManager.Instance);
+                    SourceXslt.SyntaxHighlighting = highlightingDef;
+                    SourceXml.SyntaxHighlighting = highlightingDef;
+                    OutputXml.SyntaxHighlighting = highlightingDef;
+                    Errors.SyntaxHighlighting = highlightingDef;
+                }
+            }
+
+            Properties.Settings.Default.theme = colorTheme.Id;
+            Properties.Settings.Default.Save();
+        }
+
         private void HightlightSyntax(string embeddedResourceName)
         {
             using (Stream s = GetType().Assembly.GetManifestResourceStream(embeddedResourceName))
@@ -109,16 +130,6 @@ namespace JefimsIncredibleXsltTool
                     Errors.SyntaxHighlighting = highlightingDef;
                 }
             }
-        }
-
-        private void HighlightSyntaxDark()
-        {
-            HightlightSyntax("JefimsIncredibleXsltTool.Resources.AvalonXmlDarkTheme.xml");
-        }
-
-        private void HighlightSyntaxLight()
-        {
-            HightlightSyntax("JefimsIncredibleXsltTool.Resources.AvalonXmlLightTheme.xml");
         }
 
         private void TextEditor_TextArea_TextEntering(object sender, TextCompositionEventArgs e)
@@ -218,6 +229,10 @@ namespace JefimsIncredibleXsltTool
                 {
                     _mainViewModel.ValidationSchemaFile = Properties.Settings.Default.xsdPath;
                 }
+
+                var theme = ColorTheme.ColorThemes.FirstOrDefault(t => t.Id == Properties.Settings.Default.theme);
+                theme = theme ?? ColorTheme.DefaultColorTheme;
+                ChangeColorTheme(theme);
 
                 _mainViewModel.XsltProcessingMode = (XsltProcessingMode)Properties.Settings.Default.xsltProcessingMode;
             }
@@ -361,20 +376,13 @@ namespace JefimsIncredibleXsltTool
 
         private void Window_Loaded(object sender, RoutedEventArgs e)
         {
-            HighlightSyntaxDark();
         }
 
-        private void MenuItemDarkTheme_Click(object sender, RoutedEventArgs e)
+        private void ChangeColorTheme_MouseUp(object sender, MouseButtonEventArgs e)
         {
-            this._mainViewModel.ColorTheme = ColorTheme.DarkColorTheme;
-            this.HighlightSyntaxDark();
-        }
-
-        private void MenuItemLightTheme_Click(object sender, RoutedEventArgs e)
-        {
-            this._mainViewModel.ColorTheme = ColorTheme.LightColorTheme;
-            this.HighlightSyntaxLight();
-
+            var el = sender as FrameworkElement;
+            var colorTheme = el.DataContext as ColorTheme;
+            if (colorTheme != null) ChangeColorTheme(colorTheme);
         }
     }
 }

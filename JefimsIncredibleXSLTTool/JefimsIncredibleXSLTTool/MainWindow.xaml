@@ -64,18 +64,24 @@
                 <Setter Property="RowBackground" Value="{Binding ColorTheme.Background}" />
             </Style>
             <Style TargetType="MenuItem" BasedOn="{StaticResource SimpleMenuItem}">
-                <Setter Property="Foreground" Value="{Binding ColorTheme.MenuForeground}" />
-                <Setter Property="Background" Value="{Binding ColorTheme.MenuBackground}" />
-                <Setter Property="BorderBrush" Value="{Binding ColorTheme.MenuBackground}" />
+                <Setter Property="Foreground" Value="{Binding DataContext.ColorTheme.MenuForeground, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=Window}}" />
+                <Setter Property="Background" Value="{Binding DataContext.ColorTheme.MenuBackground, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=Window}}" />
+                <Setter Property="BorderBrush" Value="{Binding DataContext.ColorTheme.MenuBackground, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=Window}}" />
             </Style>
             <Style TargetType="ComboBox" BasedOn="{StaticResource SimpleComboBox}">
                 <Setter Property="Foreground" Value="{Binding ColorTheme.ButtonForeground}" />
                 <Setter Property="Background" Value="{Binding ColorTheme.ButtonBackground}" />
             </Style>
+            <Style TargetType="Hyperlink">
+                <Setter Property="Foreground" Value="{Binding ColorTheme.Hyperlink}" />
+            </Style>
             <Style TargetType="avalonEdit:TextArea" BasedOn="{StaticResource {x:Type avalonEdit:TextArea}}">
                 <Setter Property="Cursor" Value="Resources/cursor.cur" />
                 <Setter Property="Background" Value="{Binding ColorTheme.EditorBackground}" />
                 <Setter Property="Foreground" Value="{Binding ColorTheme.EditorForeground}" />
+            </Style>
+            <Style TargetType="avalonEdit:TextView">
+                <Setter Property="LinkTextForegroundBrush" Value="{Binding ColorTheme.Hyperlink}" />
             </Style>
             <Style TargetType="avalonEdit:TextEditor" BasedOn="{StaticResource {x:Type avalonEdit:TextEditor}}">
                 <Setter Property="Background" Value="{Binding ColorTheme.EditorBackground}" />
@@ -116,10 +122,51 @@
                 <MenuItem Header="Licenses" Click="MenuItemLicenses_Click" />
                 <MenuItem Header="Contributors" Click="MenuItemContributors_Click" />
             </MenuItem>
-            <MenuItem Header="_Colors">
-                <MenuItem Header="☼ Light" Click="MenuItemLightTheme_Click" />
-                <MenuItem Header="☽ Dark" Click="MenuItemDarkTheme_Click" />
+            <MenuItem Header="_Colors" ItemsSource="{Binding ColorThemes}">
+                <MenuItem.ItemContainerStyle>
+                    <Style TargetType="{x:Type MenuItem}" BasedOn="{StaticResource {x:Type MenuItem}}">
+                        <!--We bind preview because just MouseDown and MouseUp are too late - we don't get them as they are handled and swallowed by menu item-->
+                        <EventSetter Event="PreviewMouseDown" Handler="ChangeColorTheme_MouseUp" />
+                    </Style>
+                </MenuItem.ItemContainerStyle>
+                <MenuItem.ItemTemplate>
+                    <DataTemplate>
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock MinWidth="30" FontSize="20" TextAlignment="Center" Text="{Binding IconSymbol}">
+                                <TextBlock.BitmapEffect>
+                                    <DropShadowBitmapEffect ShadowDepth="0" Color="{Binding IconHighlightColor}"  />
+                                </TextBlock.BitmapEffect>
+                            </TextBlock>
+                            <TextBlock VerticalAlignment="Center" Text="{Binding Id}" />
+                        </StackPanel>
+                    </DataTemplate>
+                </MenuItem.ItemTemplate>
             </MenuItem>
+            <!--<MenuItem Header="_Colors">
+                <MenuItem Click="MenuItemLightTheme_Click">
+                    <MenuItem.Header>
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock MinWidth="30" FontSize="20" TextAlignment="Center" Text="💡">
+                                <TextBlock.BitmapEffect>
+                                    <DropShadowBitmapEffect ShadowDepth="0" Color="Gold"  />
+                                </TextBlock.BitmapEffect>
+                            </TextBlock>
+                            <TextBlock VerticalAlignment="Center">Light</TextBlock>
+                        </StackPanel>
+                    </MenuItem.Header>
+                </MenuItem>
+                <MenuItem Click="MenuItemDarkTheme_Click">
+                    <MenuItem.Header>
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock MinWidth="30" FontSize="20" TextAlignment="Center" Text="{Binding IconSymbol}">
+                                <TextBlock.BitmapEffect>
+                                    <DropShadowBitmapEffect ShadowDepth="0" Color="{Binding IconHighlightColor}"  />
+                                </TextBlock.BitmapEffect>
+                            </TextBlock>
+                            <TextBlock VerticalAlignment="Center">Dark</TextBlock>
+                        </StackPanel>
+                    </MenuItem.Header></MenuItem>
+            </MenuItem>-->
         </Menu>
 
         <Grid Grid.Row="1">

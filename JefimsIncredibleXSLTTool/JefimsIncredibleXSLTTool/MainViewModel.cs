@@ -186,6 +186,7 @@ namespace JefimsIncredibleXsltTool
                 Notifier.ShowError(ex.ToString());
             }
         }
+        public List<ColorTheme> ColorThemes { get { return ColorTheme.ColorThemes; } }
 
         private static IEnumerable<string> ExtractParamsFromXslt(string xslt)
         {

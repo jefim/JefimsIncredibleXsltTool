@@ -1,27 +1,37 @@
-﻿using System.Windows.Media;
+﻿using System.Collections.Generic;
+using System.Windows.Media;
 
 namespace JefimsIncredibleXsltTool.Lib
 {
     public class ColorTheme
     {
-        public Brush Background { get; set; } = BrushFromHex("#2D2D30");
-        public Brush Foreground { get; set; } = BrushFromHex("#EEEEEE");
-        public Brush EditorForeground { get; set; } = BrushFromHex("#C8C8C8");
-        public Brush EditorBackground { get; set; } = BrushFromHex("#1E1E1E");
-        public Brush EditorReadOnlyBackground { get; set; } = BrushFromHex("#252526");
-        public Brush ScrollBarForeground { get; set; } = BrushFromHex("#686868");
-        public Brush ScrollBarBackground { get; set; } = BrushFromHex("#3E3E42");
-        public Brush MenuForeground { get; set; } = BrushFromHex("#EEEEEE");
-        public Brush MenuBackground { get; set; } = BrushFromHex("#2D2D30");
-        public Brush ButtonForeground { get; set; } = BrushFromHex("#EEEEEE");
-        public Brush ButtonBackground { get; set; } = BrushFromHex("#333333");
-        public Brush FoldingLines { get; set; } = BrushFromHex("#666666");
-        public Brush FoldingBackground { get; set; } = BrushFromHex("#111111");
-        public Brush SelectedFoldingLines { get; set; } = BrushFromHex("#999999");
-        public Brush SelectedFoldingBackground { get; set; } = BrushFromHex("#777777");
+        public string Id { get; set; }
+        public string AvalonXmlHighlightResourceName { get; set; }
+        public string IconSymbol { get; set; }
+        public Color IconHighlightColor { get; set; }
+        public Brush Background { get; set; }
+        public Brush Foreground { get; set; }
+        public Brush EditorForeground { get; set; }
+        public Brush EditorBackground { get; set; }
+        public Brush EditorReadOnlyBackground { get; set; }
+        public Brush ScrollBarForeground { get; set; }
+        public Brush ScrollBarBackground { get; set; }
+        public Brush MenuForeground { get; set; }
+        public Brush MenuBackground { get; set; }
+        public Brush ButtonForeground { get; set; }
+        public Brush ButtonBackground { get; set; }
+        public Brush FoldingLines { get; set; }
+        public Brush FoldingBackground { get; set; }
+        public Brush SelectedFoldingLines { get; set; }
+        public Brush SelectedFoldingBackground { get; set; }
+        public Brush Hyperlink { get; set; }
 
         public static readonly ColorTheme DarkColorTheme = new ColorTheme
         {
+            Id = "VS Dark",
+            AvalonXmlHighlightResourceName = "JefimsIncredibleXsltTool.Resources.AvalonXmlDarkTheme.xml",
+            IconSymbol = "👻",
+            IconHighlightColor = Colors.PaleTurquoise,
             Background = BrushFromHex("#2D2D30"),
             Foreground = BrushFromHex("#EEEEEE"),
             EditorForeground = BrushFromHex("#C8C8C8"),
@@ -36,11 +46,16 @@ namespace JefimsIncredibleXsltTool.Lib
             FoldingLines = BrushFromHex("#666666"),
             FoldingBackground = BrushFromHex("#111111"),
             SelectedFoldingLines = BrushFromHex("#999999"),
-            SelectedFoldingBackground = BrushFromHex("#777777")
+            SelectedFoldingBackground = BrushFromHex("#777777"),
+            Hyperlink = BrushFromHex("#8B9ED3")
         };
 
         public static readonly ColorTheme LightColorTheme = new ColorTheme
         {
+            Id = "VS Light",
+            AvalonXmlHighlightResourceName = "JefimsIncredibleXsltTool.Resources.AvalonXmlLightTheme.xml",
+            IconSymbol = "💡",
+            IconHighlightColor = Colors.Gold,
             Background = BrushFromHex("#EEEEF2"),
             Foreground = BrushFromHex("#1E1E1E"),
             EditorForeground = BrushFromHex("#000000"),
@@ -55,8 +70,13 @@ namespace JefimsIncredibleXsltTool.Lib
             FoldingLines = BrushFromHex("#A5A5A5"),
             FoldingBackground = BrushFromHex("#FFFFFF"),
             SelectedFoldingLines = BrushFromHex("#CCCCCC"),
-            SelectedFoldingBackground = BrushFromHex("#FFFFFF")
+            SelectedFoldingBackground = BrushFromHex("#FFFFFF"),
+            Hyperlink = BrushFromHex("#0000FF")
         };
+
+        public static readonly List<ColorTheme> ColorThemes = new List<ColorTheme> { LightColorTheme, DarkColorTheme };
+
+        public static readonly ColorTheme DefaultColorTheme = ColorTheme.LightColorTheme;
 
         public static Brush BrushFromHex(string hex)
         {
