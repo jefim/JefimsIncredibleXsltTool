@@ -16,6 +16,7 @@ using Microsoft.Win32;
 using Newtonsoft.Json.Linq;
 using ToastNotifications.Messages;
 using System.Windows.Controls;
+using ICSharpCode.AvalonEdit.Editing;
 
 namespace JefimsIncredibleXsltTool
 {
@@ -134,11 +135,39 @@ namespace JefimsIncredibleXsltTool
 
         private void TextEditor_TextArea_TextEntering(object sender, TextCompositionEventArgs e)
         {
-            if (e.Text.Length <= 0 || _completionWindow == null) return;
+            if (e.Text.Length <= 0) return;
 
-            if (e.Text[0] == '>' || e.Text[0] == '/')
+            if (_completionWindow != null && (e.Text[0] == '>' || e.Text[0] == '/'))
             {
                 _completionWindow?.Close();
+            }
+
+            try
+            {
+                if (e.Text[0] == '/')
+                {
+                    var textArea = e.Source as TextArea;
+                    var xml = textArea.Document.Text;
+                    var cursorPosition = textArea.Caret.Offset;
+                    if (cursorPosition == 0) return;
+                    var prevSymbol = xml[cursorPosition - 1];
+                    if (prevSymbol != '<') return;
+                    var closer = new TagCloser();
+                    var autocompleteTag = closer.GetClosingTagIfAny(xml, cursorPosition);
+                    Console.WriteLine($"Autocomplete tag: {autocompleteTag}");
+                    if (!string.IsNullOrWhiteSpace(autocompleteTag))
+                    {
+                        textArea.Document.Insert(textArea.Caret.Offset, $"/{autocompleteTag}>");
+                        e.Handled = true;
+                    }
+                }
+            }
+            catch(Exception ex)
+            {
+                // We do not want to be disrupting anyone with crashes in this
+                // autocomplete. Also, I do not know when I am going to come back
+                // to this code to fix any bugs that can be here.
+                Console.WriteLine(ex.ToString());
             }
         }
 

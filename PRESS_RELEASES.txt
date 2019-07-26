@@ -186,3 +186,21 @@ FRENDS task using that JUST thingy.
 
 Now lets forget about that clownsmanship and get to serious stuff. I urge everyone to use our github repo
 for anything related to this tool. All PR-s are welcome and any feature requests are always a good thing.
+
+
+
+1.11 - 1.12
+
+1. Thanks to Tomi Ronimus we now have a must cleaner code base. The code does not make you nauseous
+   right away anymore, which is really nice.
+2. Syntax concoctions removed completely, as it was a feature that noone actually used. All hail Tomi!
+3. I cannot anymore be the only one whose name is mentioned in the software, so I made a contributors
+   window! Access it from the file menu! Try it out - its great!
+3. Main UI had a visually minor facelift.
+4. We all live in the age of dark themes and Jefim's Incredible XSLT Tool is probably the last
+   product in the world to introduce its dark theme! But its here! A dark theme for all of us to enjoy!
+   Here is an exhaustive list of all themes currenty included: VS Light and VS Dark.
+5. If some of you hoped that there is support for externally loadable themes - hope no more! There is
+   no such thing. You can, however, clone the repo, add your theme in code and submit
+   a PR - it is pretty easy!
+6. Auto-closing XML/HTML tags! Just type </ and the tool with complete it with a tag! Yay!

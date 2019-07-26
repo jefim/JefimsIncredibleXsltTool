@@ -102,6 +102,7 @@
       <DependentUpon>Contributors.xaml</DependentUpon>
     </Compile>
     <Compile Include="Lib\ColorTheme.cs" />
+    <Compile Include="Lib\TagCloser.cs" />
     <Compile Include="Lib\XmlCompletionData.cs" />
     <Compile Include="Lib\XPathHelpers.cs" />
     <Compile Include="Lib\XsltParameter.cs" />

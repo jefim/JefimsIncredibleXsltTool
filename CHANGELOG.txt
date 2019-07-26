@@ -1,3 +1,9 @@
+1.12
+- Main UI facelifted
+- Added embedded color theming support (== no external loading of themes yet)
+- Dark and light Visual Studio themes included
+- XML/HTML tags auto-closing when you type '</'
+
 1.11
 - Removed the syntax concoctions
 - Big thanks to Tomi Ronimus for a huge refactorin job!

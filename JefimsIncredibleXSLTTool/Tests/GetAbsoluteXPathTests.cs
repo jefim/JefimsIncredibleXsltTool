@@ -17,8 +17,7 @@ namespace Tests
     </bda>
 </a>";
             Assert.AreEqual("bda", XPathHelpers.GetXElementFromCursor(xml, 4, 0).Name.LocalName);
-            Assert.AreEqual("c", XPathHelpers.GetXElementFromCursor(xml, 4, 8).Name.LocalName);
-            Assert.AreEqual("/a/bda[1]/c[2]", XPathHelpers.GetAbsoluteXPath(XPathHelpers.GetXElementFromCursor(xml, 5, 8), true));
+            Assert.AreEqual("/a/bda[1]/c[1]", XPathHelpers.GetAbsoluteXPath(XPathHelpers.GetXElementFromCursor(xml, 5, 8), true));
         }
 
         [TestMethod]
